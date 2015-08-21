@@ -22,6 +22,7 @@ public class XMLConverter {
 	
 	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "src/resourses/prefabcategorybase.xml";
 	
+	private GOBase goBase = ConstructorWindow.instance.globals.goBase;
 	
 	private File fXmlFile;
 	private DocumentBuilderFactory dbFactory;
@@ -52,16 +53,28 @@ public class XMLConverter {
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 				Node nNode = nList.item(temp);
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-					
 					Element eElement = (Element) nNode;
 					String ID = eElement.getAttribute("id");
-					int category = Integer.parseInt(eElement.getElementsByTagName("category").item(0).getTextContent());
-					int tiledWidth = Integer.parseInt(eElement.getElementsByTagName("tiledwidth").item(0).getTextContent());
-					int tiledHeight = Integer.parseInt(eElement.getElementsByTagName("tiledheight").item(0).getTextContent());
+					String categoryID = eElement.getAttribute("category");
+					int tiledWidth = Integer.parseInt(eElement.getAttribute("tiledwidth"));
+					int tiledHeight = Integer.parseInt(eElement.getAttribute("tiledheight"));
 					String textureAddress= eElement.getElementsByTagName("texture").item(0).getTextContent();
 					String description= eElement.getElementsByTagName("description").item(0).getTextContent();
 					
-					prefabs.add(new Prefab(ID,category,tiledWidth,tiledHeight,textureAddress,description));
+					ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
+					NodeList nList2 = eElement.getElementsByTagName("additiveattribute");
+					for (int temp2 = 0; temp2 < nList2.getLength(); temp2++) {
+						Node nNode2 = nList2.item(temp2);
+						if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+							Element eElement2 = (Element) nNode2;
+							String aaName = eElement2.getAttribute("name");
+							String aaType = eElement2.getAttribute("type");
+							String aaValue = eElement2.getAttribute("value");
+							additiveAttributes.add(new AdditiveAttribute(aaName,aaType,aaValue));
+						}
+					}
+					
+					prefabs.add(new Prefab(ID,categoryID,tiledWidth,tiledHeight,textureAddress,description,additiveAttributes));
 				}
 			}
 			return prefabs;
@@ -78,32 +91,32 @@ public class XMLConverter {
 			Element rootElement = doc.createElement("prefabsbase");
 			doc.appendChild(rootElement);
 
-			for(Prefab P : ConstructorWindow.instance.globals.goBase.prefabsBase){;
+			for(Prefab P : goBase.prefabsBase){;
 				Element prefab = doc.createElement("prefab");
 				rootElement.appendChild(prefab);
 
 				// set attribute to staff element
-				prefab.setAttribute("id", P.PREFAB_ID);
-
-				Element category = doc.createElement("category");
-				category.appendChild(doc.createTextNode(String.valueOf(P.category)));
-				prefab.appendChild(category);
-
-				Element tiledwidth = doc.createElement("tiledwidth");
-				tiledwidth.appendChild(doc.createTextNode(String.valueOf(P.tiledWidth)));
-				prefab.appendChild(tiledwidth);
-
-				Element tiledheight = doc.createElement("tiledheight");
-				tiledheight.appendChild(doc.createTextNode(String.valueOf(P.tiledHeight)));
-				prefab.appendChild(tiledheight);
+				prefab.setAttribute("id", P.getPrefabID());
+				prefab.setAttribute("category", P.getCategoryID());
+				prefab.setAttribute("tiledwidth", String.valueOf(P.getTiledWidth()));
+				prefab.setAttribute("tiledheight", String.valueOf(P.getTiledHeight()));
 				
 				Element texture = doc.createElement("texture");
-				texture.appendChild(doc.createTextNode(P.textureAddress));
+				texture.appendChild(doc.createTextNode(P.getTextureAddress()));
 				prefab.appendChild(texture);
 				
 				Element description = doc.createElement("description");
-				description.appendChild(doc.createTextNode(P.desctiption));
+				description.appendChild(doc.createTextNode(P.getDesctiption()));
 				prefab.appendChild(description);
+				
+				for(AdditiveAttribute a : P.getAdditiveAttributes()){
+					System.out.println(a.getAttributeName());
+					Element additiveAttribute = doc.createElement("additiveattribute");
+					additiveAttribute.setAttribute("name", a.getAttributeName().toLowerCase());
+					additiveAttribute.setAttribute("type", a.getAttributeType());
+					additiveAttribute.setAttribute("value", a.getAttributeValue());
+					prefab.appendChild(additiveAttribute);
+				}
 			}
 			// write the content into xml file
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -181,7 +194,7 @@ public class XMLConverter {
 				prefabCategory.setAttribute("isObstacle", String.valueOf(P.getObstacleBit()));
 				for(AdditiveAttribute a : P.getAdditiveAttributes()){
 					Element additiveAttribute = doc.createElement("additiveattribute");
-					additiveAttribute.setAttribute("name", a.getAttributeName());
+					additiveAttribute.setAttribute("name", a.getAttributeName().toLowerCase());
 					additiveAttribute.setAttribute("type", a.getAttributeType());
 					additiveAttribute.setAttribute("defaultvalue", a.getAttributeValue());
 					prefabCategory.appendChild(additiveAttribute);

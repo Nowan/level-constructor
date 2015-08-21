@@ -76,7 +76,7 @@ public class GOManagerWindow extends JDialog{
 		add(generateContent());
 		setJMenuBar(generateMenuBar());
 		if(goBase.prefabsBase.size()!=0)
-			showPrefabAttributes(goBase.prefabsBase.get(0).PREFAB_ID);
+			showPrefabAttributes(goBase.prefabsBase.get(0).getPrefabID());
 		
 		setVisible(true);
 	}
@@ -105,7 +105,7 @@ public class GOManagerWindow extends JDialog{
 			@Override
 			public void mouseExited(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				if(!multiplySelection && prefabsList.getSelectedValue().toString()!=currentlyShowedPrefab.PREFAB_ID)
+				if(!multiplySelection && prefabsList.getSelectedValue().toString()!=currentlyShowedPrefab.getPrefabID())
 					showPrefabAttributes(prefabsList.getSelectedValue().toString());
 			}
 
@@ -259,10 +259,10 @@ public class GOManagerWindow extends JDialog{
 	private void showPrefabAttributes(String prefabID){
 		Prefab prefab = goBase.prefabsBase.get(prefabID);
 		currentlyShowedPrefab=prefab;
-		indexJTF.setText(prefab.PREFAB_ID);
-		displayPrefabJP.setImage(prefab.texture);
+		indexJTF.setText(prefab.getPrefabID());
+		displayPrefabJP.setImage(prefab.getTexture());
 		
-		if(prefabsList.getSelectedValue()==prefab.PREFAB_ID){
+		if(prefabsList.getSelectedValue()==prefab.getPrefabID()){
 			if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
 			if(!editJB.isEnabled())editJB.setEnabled(true);
 		}
@@ -285,7 +285,7 @@ public class GOManagerWindow extends JDialog{
 				c.setVisible(true);
 			selectedItemsJL.setVisible(false);
 			String selectedID = prefabsList.getSelectedValue().toString();
-			if(selectedID!=currentlyShowedPrefab.PREFAB_ID)
+			if(selectedID!=currentlyShowedPrefab.getPrefabID())
 				showPrefabAttributes(selectedID);
 			
 			if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
@@ -305,7 +305,7 @@ public class GOManagerWindow extends JDialog{
 		if(!editMode && !multiplySelection){
 			String[] collection = goBase.prefabsBase.getIDCollection();
 			int index = prefabsList.locationToIndex(e.getPoint());
-			if(collection[index]!=currentlyShowedPrefab.PREFAB_ID)
+			if(collection[index]!=currentlyShowedPrefab.getPrefabID())
 				showPrefabAttributes(collection[index]);
 		}
 	}
@@ -358,9 +358,8 @@ public class GOManagerWindow extends JDialog{
 			super.paint(g);
 			//if no image is attached, do nothing
 			if(image==null) return;
+			
 			//elsewise draw image
-			int posX = getPreferredSize().width/2 - image.getWidth()/2;
-			int posY = getPreferredSize().height/2 - image.getHeight()/2;
 			g.drawImage(image,0,0,null);
 		} 
 		

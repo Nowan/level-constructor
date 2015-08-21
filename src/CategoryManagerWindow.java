@@ -469,7 +469,7 @@ public class CategoryManagerWindow extends JDialog{
 		addaaJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				category.getAdditiveAttributes().add(new AdditiveAttribute("Name","sString","name"));
+				category.getAdditiveAttributes().add(new AdditiveAttribute("Name","sString"));
 				showCategoryInfo(category);
 			}
 		});

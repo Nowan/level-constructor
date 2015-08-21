@@ -8,6 +8,12 @@ public class AdditiveAttribute {
 		
 		private String attributeValue;
 		
+		public AdditiveAttribute(String name, String type){
+			this.setAttributeName(name);
+			this.setAttributeType(type);
+			this.setDefaultValue();
+		}
+		
 		public AdditiveAttribute(String name, String type, String value){
 			this.setAttributeName(name);
 			this.setAttributeType(type);
@@ -28,6 +34,7 @@ public class AdditiveAttribute {
 
 		public void setAttributeType(String attributeType) {
 			this.attributeType = attributeType;
+			this.setDefaultValue();
 		}
 
 		public String getAttributeValue() {
@@ -59,6 +66,26 @@ public class AdditiveAttribute {
 
 		public void setAttributeValue(String attributeValue) {
 			this.attributeValue = attributeValue;
+		}
+		
+		public void setDefaultValue(){
+			switch(attributeType){
+			case "boolean":
+				this.setAttributeValue("false");
+				break;
+			case "integer":
+				this.setAttributeValue("1");
+				break;
+			case "double":
+				this.setAttributeValue("0.5");
+				break;
+			case "sString":
+				this.setAttributeValue("Short text");
+				break;
+			case "lString":
+				this.setAttributeValue("Long text");
+				break;
+			}
 		}
 		
 	}

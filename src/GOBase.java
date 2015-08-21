@@ -4,13 +4,13 @@ public class GOBase{
 	
 	private XMLConverter xmlConverter = ConstructorWindow.instance.globals.xmlConverter;
 
-	public PrefabsBase prefabsBase;
+	public static PrefabsBase prefabsBase;
 	
-	public PrefabCategoryBase prefabCategoryBase;
+	public static PrefabCategoryBase prefabCategoryBase;
 	
 	public GOBase(){
-		prefabsBase=new PrefabsBase();
 		prefabCategoryBase=new PrefabCategoryBase();
+		prefabsBase=new PrefabsBase();
 	}
 	
 	protected class PrefabsBase extends ArrayList<Prefab>{
@@ -34,7 +34,7 @@ public class GOBase{
 		
 		public Prefab get(String prefabID){
 			for(Prefab p : this){
-				if(p.PREFAB_ID==prefabID)
+				if(p.getPrefabID()==prefabID)
 					return p;
 			}
 			return null;
@@ -44,7 +44,7 @@ public class GOBase{
 		public String[] getIDCollection(){
 			String [] IDcollection = new String[this.size()];
 			for(int i=0; i<this.size(); i++)
-				IDcollection[i] = this.get(i).PREFAB_ID;
+				IDcollection[i] = this.get(i).getPrefabID();
 			return IDcollection;
 		}
 	}
@@ -81,6 +81,13 @@ public class GOBase{
 			for(int i=0; i<this.size(); i++)
 				IDcollection[i] = this.get(i).getName();
 			return IDcollection;
+		}
+		
+		public PrefabCategory getCategoryByID(String ID){
+			for(PrefabCategory p : this)
+				if(p.getID()==ID)
+					return p;
+			return null;
 		}
 	}
 }

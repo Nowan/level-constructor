@@ -8,10 +8,21 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -20,13 +31,18 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.NumberFormatter;
 
 public class PrefabManagerWindow  extends JDialog{
 	
@@ -40,13 +56,15 @@ public class PrefabManagerWindow  extends JDialog{
 	
 	private JTextField indexJTF;
 	private JComboBox categoryJCB;
-	private INTTextField tiledWidthJTF;
-	private INTTextField tiledHeightJTF;
+	private JFormattedTextField tiledWidthJTF;
+	private JFormattedTextField tiledHeightJTF;
 	private JTextField textureJTF;
 	private JScrollPane descriptionJSP;
 	private JTextArea descriptionJTA;
 	private JButton browseLocationJB;
 	private JPanel additiveAttributesPanel;
+	
+	private JFileChooser fileChooser;
 	
 	public PrefabManagerWindow(){
 		super(ConstructorWindow.instance, "Prefab manager");
@@ -57,6 +75,10 @@ public class PrefabManagerWindow  extends JDialog{
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setLayout(new BorderLayout());
 		setResizable(false);
+		
+		fileChooser=new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
+		fileChooser.setFileFilter(filter);
 		
 		add(generateNewPrefabContent());
 		setVisible(true);
@@ -87,8 +109,10 @@ public class PrefabManagerWindow  extends JDialog{
 		categoryJCB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-				onSelectedCategoryChanged();
+				setAdditiveAttributes(categoryJCB.getSelectedItem().toString());
+				additiveAttributesPanel.revalidate();
+				additiveAttributesPanel.repaint();
+				rebuildPrefabIndex();
 			}
 		});
 		
@@ -101,7 +125,6 @@ public class PrefabManagerWindow  extends JDialog{
 			public void actionPerformed(ActionEvent arg0) {
 				mainLink.dispose();
 				new CategoryManagerWindow(CategoryManagerWindow.PREFAB_TYPE);
-				//mainLink.dispose();
 			}
 		});
 		
@@ -110,15 +133,19 @@ public class PrefabManagerWindow  extends JDialog{
 		tiledSizeJL.setHorizontalAlignment(JLabel.RIGHT);
 		tiledSizeJL.setFont(PARAMETER_FONT);
 
-		tiledWidthJTF = new INTTextField("1");
+		tiledWidthJTF = new JFormattedTextField(new Integer(1));
 		tiledWidthJTF.setPreferredSize(new Dimension(70,22));
 		tiledWidthJTF.setHorizontalAlignment(JTextField.CENTER);
 		tiledWidthJTF.setFont(DEFAULT_FONT);
+		tiledWidthJTF.addFocusListener(new FocusListener(){
+			@Override public void focusGained(FocusEvent arg0) {}
+			@Override public void focusLost(FocusEvent arg0) {rebuildPrefabIndex();}
+		});
 		
 		JLabel xJL = new JLabel("x");
 		xJL.setFont(PARAMETER_FONT);
 		
-		tiledHeightJTF = new INTTextField("1");
+		tiledHeightJTF = new JFormattedTextField(new Integer(1));
 		tiledHeightJTF.setPreferredSize(new Dimension(70,22));
 		tiledHeightJTF.setHorizontalAlignment(JTextField.CENTER);
 		tiledHeightJTF.setFont(DEFAULT_FONT);
@@ -131,6 +158,7 @@ public class PrefabManagerWindow  extends JDialog{
 		textureJTF = new JTextField();
 		textureJTF.setPreferredSize(new Dimension(135,22));
 		textureJTF.setFont(DEFAULT_FONT);
+		textureJTF.setEditable(false);
 		
 		browseLocationJB = new JButton("...");
 		browseLocationJB.setPreferredSize(new Dimension(35,22));
@@ -138,7 +166,12 @@ public class PrefabManagerWindow  extends JDialog{
 		browseLocationJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				
+				int returnValue = fileChooser.showSaveDialog(ConstructorWindow.instance);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+			          File selectedFile = fileChooser.getSelectedFile();
+			          String fileAddress = selectedFile.getAbsolutePath();
+			          textureJTF.setText(fileAddress);
+			    }
 			}
 		});
 		
@@ -262,6 +295,8 @@ public class PrefabManagerWindow  extends JDialog{
 				0,SpringLayout.SOUTH, prefabParametersJP);
 		prefabParametersJP.add(createJB);
 		
+		rebuildPrefabIndex();
+		
 		return prefabParametersJP;
 	}
 	
@@ -271,8 +306,6 @@ public class PrefabManagerWindow  extends JDialog{
 		PrefabCategory selectedCategory = goBase.prefabCategoryBase.get(categoryName);
 		ArrayList<AdditiveAttribute> attributes = selectedCategory.getAdditiveAttributes();
 		
-		//fake jlabel
-		//additiveAttributesPanel.add(new JLabel("   "));
 		if(!attributes.isEmpty())
 			for(AdditiveAttribute a : attributes){
 				JPanel attributeJP = new JPanel();
@@ -290,7 +323,7 @@ public class PrefabManagerWindow  extends JDialog{
 				slayout.putConstraint(SpringLayout.SOUTH, attributeNameJL, 
 						0,SpringLayout.SOUTH, attributeJP);
 				slayout.putConstraint(SpringLayout.WEST, attributeNameJL, 
-						25,SpringLayout.WEST, attributeJP);
+						5,SpringLayout.WEST, attributeJP);
 				attributeJP.add(attributeNameJL);
 				switch(a.getAttributeType()){
 				case "boolean":
@@ -304,16 +337,63 @@ public class PrefabManagerWindow  extends JDialog{
 							6, SpringLayout.EAST, attributeNameJL);
 					attributeJP.add(aaJCB);
 					break;
-				default:
+				case "integer":
+					JFormattedTextField aaIJFTF = new JFormattedTextField(new Integer(a.getAttributeValue()));
+					aaIJFTF.setPreferredSize(new Dimension(50, 20));
+					aaIJFTF.setFont(DEFAULT_FONT);
+					aaIJFTF.setHorizontalAlignment(JFormattedTextField.CENTER);
+					
+					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaIJFTF, 
+							0,SpringLayout.VERTICAL_CENTER, attributeNameJL);
+					slayout.putConstraint(SpringLayout.WEST, aaIJFTF, 
+							10, SpringLayout.EAST, attributeNameJL);
+					attributeJP.add(aaIJFTF);
+					break;
+				case "double":
+					JFormattedTextField aaDJFTF = new JFormattedTextField(new Double(a.getAttributeValue()));
+					aaDJFTF.setPreferredSize(new Dimension(50, 20));
+					aaDJFTF.setFont(DEFAULT_FONT);
+					aaDJFTF.setHorizontalAlignment(JFormattedTextField.CENTER);
+					
+					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaDJFTF, 
+							0,SpringLayout.VERTICAL_CENTER, attributeNameJL);
+					slayout.putConstraint(SpringLayout.WEST, aaDJFTF, 
+							10, SpringLayout.EAST, attributeNameJL);
+					attributeJP.add(aaDJFTF);
+					break;
+				case "sString":
 					JTextField aaJTF = new JTextField();
-					aaJTF.setPreferredSize(new Dimension(50, 20));
+					aaJTF.setPreferredSize(new Dimension(100, 20));
 					aaJTF.setFont(DEFAULT_FONT);
+					aaJTF.setHorizontalAlignment(JFormattedTextField.CENTER);
 					
 					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaJTF, 
 							0,SpringLayout.VERTICAL_CENTER, attributeNameJL);
 					slayout.putConstraint(SpringLayout.WEST, aaJTF, 
 							10, SpringLayout.EAST, attributeNameJL);
 					attributeJP.add(aaJTF);
+					break;
+				case "lString":
+					JTextArea aaJTA = new JTextArea();
+					aaJTA.setFont(DEFAULT_FONT);
+					aaJTA.setMargin(new Insets(5,5,5,5));
+					aaJTA.setLineWrap(true);
+					
+					JScrollPane aaJSP = new JScrollPane(aaJTA);
+					aaJSP.setPreferredSize(new Dimension(100,80));
+					
+					attributeJP.setPreferredSize(new Dimension(240,85));
+					attributeJP.setMaximumSize(attributeJP.getPreferredSize());
+					attributeJP.setMinimumSize(attributeJP.getPreferredSize());
+					
+					slayout.putConstraint(SpringLayout.NORTH, attributeNameJL, 
+							2,SpringLayout.NORTH, attributeJP);
+					
+					slayout.putConstraint(SpringLayout.NORTH, aaJSP, 
+							0,SpringLayout.NORTH, attributeJP);
+					slayout.putConstraint(SpringLayout.WEST, aaJSP, 
+							10, SpringLayout.EAST, attributeNameJL);
+					attributeJP.add(aaJSP);
 					break;
 				}
 				additiveAttributesPanel.add(attributeJP);
@@ -325,34 +405,60 @@ public class PrefabManagerWindow  extends JDialog{
 			}
 	}
 	
-	private void onSelectedCategoryChanged(){
-		setAdditiveAttributes(categoryJCB.getSelectedItem().toString());
-		additiveAttributesPanel.revalidate();
-		additiveAttributesPanel.repaint();
+	private void rebuildPrefabIndex(){
+		String categoryIndex=goBase.prefabCategoryBase.get(categoryJCB.getSelectedItem().toString()).getID();
+		int number = 0;
+		for(Prefab p : goBase.prefabsBase)
+			if(p.getCategoryID().equals(categoryIndex))
+				number++;
+		indexJTF.setText(categoryIndex+"_"+String.format("%02d", number));
 	}
-	
+
 	public void onCreateClicked(){
-		
-	}
-	
-	private class INTTextField extends JTextField implements KeyListener{
-		
-		public INTTextField(String s){
-			super(s);
-			addKeyListener(this);
-		}
-		
-		@Override
-		public void keyPressed(KeyEvent e) {
-			if(e.getKeyCode()>=48 && e.getKeyCode()<=57){
-				e.consume();
+		try{
+			//saving all the values into variables
+			String id = indexJTF.getText();
+			String categoryName = categoryJCB.getSelectedItem().toString();
+			int tw = Integer.valueOf(tiledWidthJTF.getText());
+			int th = Integer.valueOf(tiledHeightJTF.getText());
+			String textureAddress = textureJTF.getText();
+			String description = descriptionJTA.getText();
+			
+			PrefabCategory category = goBase.prefabCategoryBase.get(categoryName);
+			ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
+			for(int i=0;i<category.getAdditiveAttributes().size();i++){
+				additiveAttributes.add(category.getAdditiveAttributes().get(i));
+				JPanel panel = (JPanel)additiveAttributesPanel.getComponent(i);
+				switch(additiveAttributes.get(i).getAttributeType()){
+				case "boolean":
+					boolean bln = ((JCheckBox)panel.getComponent(1)).isSelected();
+					additiveAttributes.get(i).setAttributeValue(String.valueOf(bln));
+					break;
+				default:
+					String dflt = ((JTextField)panel.getComponent(1)).getText();
+					additiveAttributes.get(i).setAttributeValue(String.valueOf(dflt));
+					break;
+				}
 			}
+			//if some text fields are missing, throw an exception
+			if(tw==0 || th==0 || textureAddress.isEmpty())
+				throw new Exception();
+			//copy texture image to the textures folder
+			String textureAddress2 = "resourses/textures/"+id+textureAddress.substring(textureAddress.lastIndexOf('.'));
+			Files.copy(Paths.get(textureAddress),Paths.get("src/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(Paths.get(textureAddress),Paths.get("bin/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+			
+			//add new Prefab to the base
+			goBase.prefabsBase.add(new Prefab(id,goBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
+			xmlConverter.savePrefabBase();
+			
+			mainLink.dispose();
 		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {}
-
-		@Override
-		public void keyTyped(KeyEvent e) {}
+		catch(Exception ex){
+			System.out.println();
+			JOptionPane.showMessageDialog(this,"Some fields are missing",
+					"", JOptionPane.ERROR_MESSAGE);
+		}
 	}
+
 }
