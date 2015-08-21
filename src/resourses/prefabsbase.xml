@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <prefabsbase>
 	<prefab category="flr" id="flr_00" tiledheight="2" tiledwidth="3">
-		<texture>resourses/textures/loc1_floor_texture1.png</texture>
-		<description> floor </description>
+		<texture>resourses/textures/flr_00.png</texture>
+		<description>floor</description>
 		<additiveattribute name="acceleration" type="double" value="0.5"/>
 	</prefab>
 	<prefab category="clg" id="clg_00" tiledheight="2" tiledwidth="1">
-		<texture>resourses/textures/loc1_ceiling_texture1.png</texture>
-		<description> ceiling </description>
+		<texture>resourses/textures/clg_00.png</texture>
+		<description>ceiling</description>
 	</prefab>
 </prefabsbase>

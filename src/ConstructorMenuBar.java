@@ -153,7 +153,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		goManager.setFont(DEFAULT_FONT);
 		goManager.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				new GOManagerWindow();
+				ConstructorWindow.instance.goManager.setVisible(true);
 			}
 		});
 		

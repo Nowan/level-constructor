@@ -64,11 +64,15 @@ public class PrefabManagerWindow  extends JDialog{
 	private JButton browseLocationJB;
 	private JPanel additiveAttributesPanel;
 	
+	//if null, manager adds new Prefab to the base 
+	//if not null, manager saves all changes to this object
+	private Prefab editPrefab;
+	
 	private JFileChooser fileChooser;
 	
 	public PrefabManagerWindow(){
 		super(ConstructorWindow.instance, "Prefab manager");
-		//blocks access to the main window
+		editPrefab=null;
 		this.setModal(true);
 		setSize(303,490);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -81,6 +85,48 @@ public class PrefabManagerWindow  extends JDialog{
 		fileChooser.setFileFilter(filter);
 		
 		add(generateNewPrefabContent());
+		setVisible(true);
+	}
+	
+	public PrefabManagerWindow(Prefab P){
+		super(ConstructorWindow.instance, "Prefab manager");
+		editPrefab=P;
+		this.setModal(true);
+		setSize(303,490);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setLocationRelativeTo(ConstructorWindow.instance);
+		setLayout(new BorderLayout());
+		setResizable(false);
+		
+		fileChooser=new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
+		fileChooser.setFileFilter(filter);
+		
+		add(generateNewPrefabContent());
+		
+		indexJTF.setText(editPrefab.getPrefabID());
+		for(int i=0; i<goBase.prefabCategoryBase.size();i++)
+			if(goBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
+				categoryJCB.setSelectedIndex(i);
+			}
+		categoryJCB.setEnabled(false);
+		tiledWidthJTF.setText(String.valueOf(editPrefab.getTiledWidth()));
+		tiledHeightJTF.setText(String.valueOf(editPrefab.getTiledHeight()));
+		textureJTF.setText(editPrefab.getTextureAddress());
+		descriptionJTA.setText(editPrefab.getDesctiption());
+		setAdditiveAttributes(P.getCategory().getName());
+		for(int i=0;i<editPrefab.getCategory().getAdditiveAttributes().size();i++){
+			JPanel panel = (JPanel)additiveAttributesPanel.getComponent(i);
+			switch(editPrefab.getAdditiveAttributes().get(i).getAttributeType()){
+			case "boolean":
+				((JCheckBox)panel.getComponent(1)).setSelected((boolean)editPrefab.getAdditiveAttributes().get(i).getConvertedValue());;
+				break;
+			default:
+				((JTextField)panel.getComponent(1)).setText(editPrefab.getAdditiveAttributes().get(i).getAttributeValue());;
+				break;
+			}
+		}
+		
 		setVisible(true);
 	}
 	
@@ -445,17 +491,33 @@ public class PrefabManagerWindow  extends JDialog{
 				throw new Exception();
 			//copy texture image to the textures folder
 			String textureAddress2 = "resourses/textures/"+id+textureAddress.substring(textureAddress.lastIndexOf('.'));
-			Files.copy(Paths.get(textureAddress),Paths.get("src/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
-			Files.copy(Paths.get(textureAddress),Paths.get("bin/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+			if(!textureAddress.equals(textureAddress2)){
+				Files.copy(Paths.get(textureAddress),Paths.get("src/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+				Files.copy(Paths.get(textureAddress),Paths.get("bin/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+			}
+			//if there is no prefab to edit, add new Prefab to the base
+			if(editPrefab==null)
+				goBase.prefabsBase.add(new Prefab(id,goBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
+			//else - save the parameters to editPrefab
+			else{
+				editPrefab.setPrefabID(id);
+				editPrefab.setCategory(goBase.prefabCategoryBase.get(categoryName).getID());
+				editPrefab.setTiledWidth(tw);
+				editPrefab.setTiledHeight(th);
+				editPrefab.setTextureAddress(textureAddress2);
+				editPrefab.setDesctiption(description);
+				editPrefab.setAdditiveAttributes(additiveAttributes);
+			}
+				
 			
-			//add new Prefab to the base
-			goBase.prefabsBase.add(new Prefab(id,goBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
 			xmlConverter.savePrefabBase();
 			
+			//refresh Game Object Manager Window
+			ConstructorWindow.instance.goManager.refresh();
 			mainLink.dispose();
 		}
 		catch(Exception ex){
-			System.out.println();
+			System.out.println(ex.getMessage());
 			JOptionPane.showMessageDialog(this,"Some fields are missing",
 					"", JOptionPane.ERROR_MESSAGE);
 		}

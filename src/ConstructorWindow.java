@@ -20,6 +20,8 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 	
 	public static final Globals globals = new Globals();
 	
+	public static GOManagerWindow goManager;
+	
 	private ConstructorWindow(){
 		super("Mending Rush - level constructor");
 		setSize(1200,750);
@@ -29,13 +31,13 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		addMouseListener(this);
 		
+		goManager= new GOManagerWindow();
 		setJMenuBar(new ConstructorMenuBar());
 		
 		setVisible(true);
 	}
 
-	public static void main(String[] args) {
-	}
+	public static void main(String[] args) {}
 
 	@Override
 	public void mouseClicked(MouseEvent evt) {}
@@ -47,9 +49,7 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 	public void mouseExited(MouseEvent evt) {}
 
 	@Override 
-	public void mousePressed(MouseEvent evt) {
-
-	}
+	public void mousePressed(MouseEvent evt) {}
 
 	@Override 
 	public void mouseReleased(MouseEvent evt) {}

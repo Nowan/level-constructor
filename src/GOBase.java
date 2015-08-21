@@ -68,7 +68,6 @@ public class GOBase{
 			this.fill();
 		}
 		
-		//Returns collection of strings to use in the JList
 		public PrefabCategory get(String name){
 			for(PrefabCategory p : this)
 				if(p.getName()==name)
@@ -85,7 +84,7 @@ public class GOBase{
 		
 		public PrefabCategory getCategoryByID(String ID){
 			for(PrefabCategory p : this)
-				if(p.getID()==ID)
+				if(p.getID().equals(ID))
 					return p;
 			return null;
 		}

@@ -33,12 +33,6 @@ public class Prefab {
 			this.setTextureAddress(prefabTexture);
 			this.setDesctiption(description);
 			this.setAdditiveAttributes(additiveAttributes);
-			try{
-				this.setTexture(ImageIO.read(getClass().getResource(prefabTexture)));
-			}
-			catch(IOException ex){
-				System.out.println(ex.getMessage());
-			}
 		}
 
 		public String getTextureAddress() {
@@ -46,6 +40,12 @@ public class Prefab {
 		}
 		public void setTextureAddress(String textureAddress) {
 			this.textureAddress = textureAddress;
+			try{
+				this.setTexture(ImageIO.read(getClass().getResource(textureAddress)));
+			}
+			catch(IOException ex){
+				System.out.println(ex.getMessage());
+			}
 		}
 		public BufferedImage getTexture() {
 			return texture;

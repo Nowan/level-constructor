@@ -110,7 +110,6 @@ public class XMLConverter {
 				prefab.appendChild(description);
 				
 				for(AdditiveAttribute a : P.getAdditiveAttributes()){
-					System.out.println(a.getAttributeName());
 					Element additiveAttribute = doc.createElement("additiveattribute");
 					additiveAttribute.setAttribute("name", a.getAttributeName().toLowerCase());
 					additiveAttribute.setAttribute("type", a.getAttributeType());

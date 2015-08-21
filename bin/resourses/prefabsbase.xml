@@ -1,12 +1,1 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<prefabsbase>
-	<prefab category="flr" id="flr_00" tiledheight="2" tiledwidth="3">
-		<texture>resourses/textures/loc1_floor_texture1.png</texture>
-		<description> floor </description>
-		<additiveattribute name="acceleration" type="double" value="0.5"/>
-	</prefab>
-	<prefab category="clg" id="clg_00" tiledheight="2" tiledwidth="1">
-		<texture>resourses/textures/loc1_ceiling_texture1.png</texture>
-		<description> ceiling </description>
-	</prefab>
-</prefabsbase>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><prefabsbase><prefab category="clg" id="clg_00" tiledheight="2" tiledwidth="1"><texture>resourses/textures/loc1_ceiling_texture1.png</texture><description> ceiling </description></prefab><prefab category="flr" id="flr_00" tiledheight="1" tiledwidth="3"><texture>resourses/textures/flr_00.jpg</texture><description/><additiveattribute name="acceleration" type="double" value="23"/><additiveattribute name="broken" type="boolean" value="false"/></prefab><prefab category="flr" id="flr_01" tiledheight="1" tiledwidth="1"><texture>resourses/textures/flr_01.jpg</texture><description/><additiveattribute name="acceleration" type="double" value="1"/><additiveattribute name="broken" type="boolean" value="false"/></prefab></prefabsbase>
