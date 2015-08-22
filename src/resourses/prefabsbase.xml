@@ -9,4 +9,18 @@
 		<texture>resourses/textures/clg_00.png</texture>
 		<description>ceiling</description>
 	</prefab>
+	<prefab category="flr" id="flr_01" tiledheight="2" tiledwidth="3">
+		<texture>resourses/textures/flr_01.png</texture>
+		<description>floor</description>
+		<additiveattribute name="acceleration" type="double" value="0.5"/>
+	</prefab>
+	<prefab category="clg" id="clg_01" tiledheight="2" tiledwidth="1">
+		<texture>resourses/textures/clg_01.png</texture>
+		<description>ceiling</description>
+	</prefab>
+	<prefab category="flr" id="flr_02" tiledheight="2" tiledwidth="3">
+		<texture>resourses/textures/flr_02.png</texture>
+		<description>floor</description>
+		<additiveattribute name="acceleration" type="double" value="0.5"/>
+	</prefab>
 </prefabsbase>

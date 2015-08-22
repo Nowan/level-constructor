@@ -34,6 +34,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -243,9 +244,17 @@ public class GOManagerWindow extends JDialog{
 		JMenuItem backgroundJMI = new JMenuItem("Background");
 		backgroundJMI.setFont(DEFAULT_FONT);
 		
-		JMenuItem categoryManagerJMI = new JMenuItem("Category manager");
-		categoryManagerJMI.setFont(DEFAULT_FONT);
+		JMenu manageJM = new JMenu("Manage");
+		manageJM.setFont(DEFAULT_FONT);
 		
+		JMenuItem categoryManagerJMI = new JMenuItem("Categories");
+		categoryManagerJMI.setFont(DEFAULT_FONT);
+		categoryManagerJMI.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				new CategoryManagerWindow(CategoryManagerWindow.PREFAB_TYPE);
+			}
+		});
 		
 		JSeparator separator = new JSeparator();
 		JLabel showCategoryJL = new JLabel("Show category: ");
@@ -257,7 +266,8 @@ public class GOManagerWindow extends JDialog{
 		newJM.add(particleJMI);
 		newJM.add(backgroundJMI);
 		menu.add(newJM);
-		menu.add(categoryManagerJMI);
+		manageJM.add(categoryManagerJMI);
+		menu.add(manageJM);
 		menu.add(separator);
 		menu.add(showCategoryJL);
 		menu.add(categoryJCB);
@@ -306,16 +316,24 @@ public class GOManagerWindow extends JDialog{
 	}
 	
 	private void onDeleteClicked(){
-		goBase.prefabsBase.remove(currentlyShowedPrefab);
-		xmlConverter.savePrefabBase();
-		try{
-		Files.delete(Paths.get("src/"+currentlyShowedPrefab.getTextureAddress()));
-		Files.delete(Paths.get("bin/"+currentlyShowedPrefab.getTextureAddress()));
+		new JOptionPane();
+		int n = JOptionPane.showConfirmDialog(
+			  	ConstructorWindow.instance,
+			    "Are you sure you want to delete this object? All data will be lost",
+			    "Message",
+			    JOptionPane.YES_NO_OPTION);
+		if(n==0){
+			goBase.prefabsBase.remove(currentlyShowedPrefab);
+			xmlConverter.savePrefabBase();
+			try{
+				Files.delete(Paths.get("src/"+currentlyShowedPrefab.getTextureAddress()));
+				Files.delete(Paths.get("bin/"+currentlyShowedPrefab.getTextureAddress()));
+			}
+			catch(IOException ex){
+				System.out.println(ex.getStackTrace()+"!!!");
+			}
+			refresh();
 		}
-		catch(IOException ex){
-			System.out.println(ex.getStackTrace()+"!!!");
-		}
-		refresh();
 	}
 	
 	private void onMouseMoved(MouseEvent e){

@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -18,8 +19,10 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -134,6 +137,27 @@ public class CategoryManagerWindow extends JDialog{
 				}
 				//usual action - remove selected object from the categoryList
 				else{
+					new JOptionPane();
+					int n = JOptionPane.showConfirmDialog(
+		    			  	ConstructorWindow.instance,
+		    			    "Are you sure you want to delete this category? All objects attached to it will be destroyed",
+		    			    "Message",
+		    			    JOptionPane.YES_NO_OPTION);
+					if(n==0){
+					//number of prefabs of the deleted category
+					int pcn=0;
+					for(int i=0;i<goBase.prefabsBase.size();i++)
+						if(goBase.prefabsBase.get(i).getCategoryID().contains(currentlySelectedCategory.getID())){
+							goBase.prefabsBase.remove(i);
+							pcn++;
+						}
+					//if any prefabs were deleted - save changes to prefabsbase.xml & refresh goManager
+					if(pcn>0){
+						System.out.println(pcn);
+						ConstructorWindow.instance.globals.xmlConverter.savePrefabBase();
+						ConstructorWindow.instance.goManager.refresh();
+						}
+					//if category list will become empty after deleting this object, disable remove btn and select nothing
 					if(listModel.size()==1){
 							editJB.setEnabled(false);
 							removeJB.setEnabled(false);
@@ -142,6 +166,7 @@ public class CategoryManagerWindow extends JDialog{
 							goBase.prefabCategoryBase.remove(currentlySelectedCategory);
 						}
 					else{
+					//making decision, which category select next after deleting current
 					if(categoryList.getSelectedIndex()!=0){
 						goBase.prefabCategoryBase.remove(currentlySelectedCategory);
 						categoryList.setSelectedIndex(categoryList.getSelectedIndex()-1);
@@ -155,10 +180,12 @@ public class CategoryManagerWindow extends JDialog{
 					currentlySelectedCategory=goBase.prefabCategoryBase.get(categoryList.getSelectedValue());
 					showCategoryInfo(currentlySelectedCategory);
 					}
+					
+					//saving changes to prefabcategorybase.xml
+					ConstructorWindow.instance.globals.xmlConverter.savePrefabCategoryBase();
+					}
 				}
 				
-				//saving changes to prefabcategorybase.xml
-				ConstructorWindow.instance.globals.xmlConverter.savePrefabCategoryBase();
 			}
 		});
 		

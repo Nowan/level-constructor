@@ -19,7 +19,7 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 	public static final ConstructorWindow instance = new ConstructorWindow();
 	
 	public static final Globals globals = new Globals();
-	
+		
 	public static GOManagerWindow goManager;
 	
 	private ConstructorWindow(){

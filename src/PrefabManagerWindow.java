@@ -453,11 +453,14 @@ public class PrefabManagerWindow  extends JDialog{
 	
 	private void rebuildPrefabIndex(){
 		String categoryIndex=goBase.prefabCategoryBase.get(categoryJCB.getSelectedItem().toString()).getID();
-		int number = 0;
+		int lastIndex = 0;
 		for(Prefab p : goBase.prefabsBase)
-			if(p.getCategoryID().equals(categoryIndex))
-				number++;
-		indexJTF.setText(categoryIndex+"_"+String.format("%02d", number));
+			if(p.getCategoryID().equals(categoryIndex)){
+				int ind = Integer.valueOf(p.getPrefabID().substring(p.getPrefabID().length()-2));
+				if(ind>lastIndex)
+					lastIndex=ind;
+			}
+		indexJTF.setText(categoryIndex+"_"+String.format("%02d", lastIndex+1));
 	}
 
 	public void onCreateClicked(){
@@ -508,8 +511,7 @@ public class PrefabManagerWindow  extends JDialog{
 				editPrefab.setDesctiption(description);
 				editPrefab.setAdditiveAttributes(additiveAttributes);
 			}
-				
-			
+
 			xmlConverter.savePrefabBase();
 			
 			//refresh Game Object Manager Window
