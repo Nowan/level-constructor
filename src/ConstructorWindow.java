@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
@@ -22,17 +23,23 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 		
 	public static GOManagerWindow goManager;
 	
+	public ToolsPanel toolsPanel;
+	
 	private ConstructorWindow(){
 		super("Mending Rush - level constructor");
-		setSize(1200,750);
+		setSize(1050,700);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setLocationRelativeTo(null);
 		setLayout(new BorderLayout());
-		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		addMouseListener(this);
 		
 		goManager= new GOManagerWindow();
 		setJMenuBar(new ConstructorMenuBar());
+		
+		toolsPanel=new ToolsPanel();
+		
+		add(toolsPanel,BorderLayout.LINE_END);
 		
 		setVisible(true);
 	}
