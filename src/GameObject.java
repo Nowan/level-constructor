@@ -15,11 +15,11 @@ public class GameObject{
 		this.line=line;
 	}
 	
-	public int getWidth(){
+	public int getTiledWidth(){
 		return prefab.getTiledWidth();
 	}
 	
-	public int getHeight(){
+	public int getTiledHeight(){
 		return prefab.getTiledHeight();
 	}
 	
