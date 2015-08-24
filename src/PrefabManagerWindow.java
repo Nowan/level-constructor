@@ -90,11 +90,11 @@ public class PrefabManagerWindow  extends JDialog{
 		
 		add(generateNewPrefabContent());
 		
-		indexJTF.setText(editPrefab.getPrefabID());
 		for(int i=0; i<goBase.prefabCategoryBase.size();i++)
 			if(goBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
 				categoryJCB.setSelectedIndex(i);
 			}
+		indexJTF.setText(editPrefab.getPrefabID());
 		categoryJCB.setEnabled(false);
 		tiledWidthJTF.setText(String.valueOf(editPrefab.getTiledWidth()));
 		tiledHeightJTF.setText(String.valueOf(editPrefab.getTiledHeight()));
@@ -169,10 +169,6 @@ public class PrefabManagerWindow  extends JDialog{
 		tiledWidthJTF.setPreferredSize(new Dimension(70,22));
 		tiledWidthJTF.setHorizontalAlignment(JTextField.CENTER);
 		tiledWidthJTF.setFont(DEFAULT_FONT);
-		tiledWidthJTF.addFocusListener(new FocusListener(){
-			@Override public void focusGained(FocusEvent arg0) {}
-			@Override public void focusLost(FocusEvent arg0) {rebuildPrefabIndex();}
-		});
 		
 		JLabel xJL = new JLabel("x");
 		xJL.setFont(PARAMETER_FONT);
