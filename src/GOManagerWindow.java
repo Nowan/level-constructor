@@ -418,5 +418,4 @@ public class GOManagerWindow extends JDialog{
 				getComponent(i).setEnabled(arg0);
 		}
 	}
-	
 }

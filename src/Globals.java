@@ -16,4 +16,6 @@ public class Globals {
 	//All tools of the constructor - insertion tool, cleaner, inspector, etc.  
 	public static final ToolBox toolBox = new ToolBox();
 	
+	//Level data
+	public Level level;
 }

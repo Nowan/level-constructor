@@ -18,11 +18,13 @@ public class ToolBox {
 		public void invoke(Prefab prefab){
 			this.prefab = prefab;
 			active = true;
+			//ConstructorWindow.instance.toolsPanel.setITButtonActive(active);
 		}
 	
 		public void disable(){
 			prefab = null;
 			active = false;
+			//ConstructorWindow.instance.toolsPanel.setITButtonActive(active);
 		}
 	
 		public Prefab getPrefab(){

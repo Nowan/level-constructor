@@ -18,6 +18,9 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 public class TilesTab extends JPanel{
 	
@@ -27,8 +30,12 @@ public class TilesTab extends JPanel{
 	//filters for prefabsPane
 	private JComboBox<String> selectCategoryJCB;
 
-	//panel, which displays selected prefab
-	public PreviewPanel previewPanel;
+	//panel, which displays parameters of selected prefab
+	private InspectorPanel inspectorPanel;
+	
+	//panel, which displays texture of selected prefab
+	private PreviewPanel previewPanel = new PreviewPanel();
+	
 	private JScrollPane vbar;
 	
 	//selected prefab in prefabsPane
@@ -63,11 +70,16 @@ public class TilesTab extends JPanel{
 		selectCategoryJCB.setSelectedIndex(0);
 		
 		vbar = new JScrollPane(prefabsPane,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		vbar.setPreferredSize(new Dimension(300,340));
+		vbar.setPreferredSize(new Dimension(300,220));
 		add(vbar);
+		
+		//adding inspector panel to content panel
+		inspectorPanel = new InspectorPanel();
+		add(inspectorPanel);
 		
 		//adding preview panel to content panel
 		previewPanel = new PreviewPanel();
+		previewPanel.setPreferredSize(new Dimension(300,350));
 		add(previewPanel);
 	}
 
@@ -93,34 +105,96 @@ public class TilesTab extends JPanel{
 		Globals.toolBox.insertionTool.disable();
 		selectedItem.setBorder(BorderFactory.createEmptyBorder());
 		selectedItem = null;
-		//ConstructorWindow.instance.workspace.repaintLevel();
+		inspectorPanel.hideInfo();
 		previewPanel.hideImage();
+		//ConstructorWindow.instance.workspace.repaintLevel();
 	}
 	
 	public void selectItem(PrefabPreviewItem ppi){
 		ppi.setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
 		Globals.toolBox.insertionTool.invoke(ppi.prefab);
+		inspectorPanel.showInfo(ppi.prefab);
+		previewPanel.setImage(ppi.prefab.getTexture());
 		selectedItem = ppi;
 		ppi.repaint();
 	}
-	 
-	public class PreviewPanel extends JPanel{
+	
+	public class InspectorPanel extends JPanel{
+		
+		private JTable prefabInfoTable;
+		private DefaultTableModel tableModel;
+		private JScrollPane tableContainer;
+		
+		public InspectorPanel(){
+			setPreferredSize(new Dimension(300,120));
+			setSize(getPreferredSize());
+			
+			tableModel = new DefaultTableModel();
+			tableModel.addColumn("Parameter");
+			tableModel.addColumn("Value");
+			prefabInfoTable = new JTable(tableModel);
+			
+			tableContainer= new JScrollPane(prefabInfoTable);
+			tableContainer.setPreferredSize(getPreferredSize());
+			tableContainer.setBorder(BorderFactory.createEmptyBorder());
+			
+			this.add(tableContainer);
+			//at start, preview panel is empty
+			this.hideInfo();
+		}
+		
+		//fill the table model
+		public void showInfo(Prefab p){
+			hideInfo();
+			tableModel.addRow(new Object[]{"Prefab ID ",p.getPrefabID()});
+			tableModel.addRow(new Object[]{"Category ID ",p.getCategoryID()});
+			tableModel.addRow(new Object[]{"Tiled width ",p.getTiledWidth()});
+			tableModel.addRow(new Object[]{"Tiled height ",p.getTiledHeight()});
+			tableModel.addRow(new Object[]{"Texture ",p.getTextureAddress()});
+			for(AdditiveAttribute a : p.getAdditiveAttributes())
+				tableModel.addRow(new Object[]{a.getAttributeName(),a.getAttributeValue()});
+		}
+	
+		//clear the table model
+		public void hideInfo(){
+			for(int i=tableModel.getRowCount()-1;i>=0;i--)
+				tableModel.removeRow(i);
+		}
+		
+	}
+	
+	private class PreviewPanel extends JPanel{
 		
 		//original image of selected tile
-		private Image image;
-		
+		private BufferedImage image;
+
 		public PreviewPanel(){
-			this.setPreferredSize(new Dimension(300,300));
-			this.setSize(this.getPreferredSize());
-			this.setBackground(new Color(100,100,100));
+			this.setBackground(Color.BLACK);
 			//at start, preview panel is empty
 			this.hideImage();
 		}
 		
 		//set image to preview
-		public void setImage(Image image){
-			this.image = image;
+		public void setImage(BufferedImage image){
+			this.image=resizeImage(image);
 			repaint();
+		}
+		
+		private BufferedImage resizeImage(BufferedImage originalImage){
+			int type = originalImage.getType() == 0? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
+			BufferedImage resizedImage = new BufferedImage(this.getWidth(), this.getHeight(), type);
+			Graphics2D g = resizedImage.createGraphics();
+			
+			float scaleFactor = (float)((this.getPreferredSize().width+ this.getPreferredSize().height)/2)/Math.max(originalImage.getWidth(), originalImage.getHeight());
+			int resizedWidth = (int)(originalImage.getWidth()*scaleFactor);
+			int resizedHeight = (int)(originalImage.getHeight()*scaleFactor);
+			int posX = this.getPreferredSize().width/2 - resizedWidth/2;
+			int posY = this.getPreferredSize().height/2 - resizedHeight/2;
+			
+			g.drawImage(originalImage, posX, posY, resizedWidth, resizedHeight, null);
+			g.dispose();
+		 
+			return resizedImage;
 		}
 		
 		//hide image from preview
@@ -136,7 +210,7 @@ public class TilesTab extends JPanel{
 			//if no image is attached, do nothing
 			if(image==null) return;
 			//elsewise draw image
-			g.drawImage(image,0,0,null); 
+			g.drawImage(image,0,0,null);
 		} 
 		
 		@Override
@@ -157,13 +231,13 @@ public class TilesTab extends JPanel{
 		
 		public PrefabPreviewItem(Prefab prefab){
 			this.prefab = prefab;
-			setPreferredSize(new Dimension(130,150));
+			setPreferredSize(new Dimension(88,95));
 			setContentAreaFilled(false);
 			//when the filter is changed, prefabsPane generates new array TilePreviewItem which will suit the filter
 			//in this case, selected tile must be created with border and a link must change
 			
 			if(Globals.toolBox.insertionTool.isActive()&&this.prefab==Globals.toolBox.insertionTool.getPrefab()){
-				setBorder(BorderFactory.createLineBorder(new Color(0,255,0),3));
+				setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
 				selectedItem=this;
 			}
 			else
@@ -194,22 +268,30 @@ public class TilesTab extends JPanel{
 		public void onMouseOver(){
 			if(this.prefab!=Globals.toolBox.insertionTool.getPrefab())
 				this.setBorder(BorderFactory.createLineBorder(new Color(0,255,0)));
+			inspectorPanel.showInfo(prefab);
 			previewPanel.setImage(prefab.getTexture());
 		}
 		
 		public void onMouseOut(){
 			if(this.prefab!=Globals.toolBox.insertionTool.getPrefab())
 				this.setBorder(BorderFactory.createEmptyBorder());
-			if(Globals.toolBox.insertionTool.isActive())
+			if(Globals.toolBox.insertionTool.isActive()){
+				inspectorPanel.showInfo(Globals.toolBox.insertionTool.getPrefab());
 				previewPanel.setImage(Globals.toolBox.insertionTool.getPrefab().getTexture());
-			else 
+				}
+			else {
+				inspectorPanel.hideInfo();
 				previewPanel.hideImage();
+				}
 		}
 		
 		public void onMouseClick(){
 			if(this.prefab==Globals.toolBox.insertionTool.getPrefab()){
 				removeSelection();
 				setBorder(BorderFactory.createLineBorder(Color.GREEN,1));
+				inspectorPanel.showInfo(prefab);
+				previewPanel.setImage(prefab.getTexture());
+				
 			}
 			else{
 				if(selectedItem!=null)
@@ -243,6 +325,7 @@ public class TilesTab extends JPanel{
 		if(!arg0){
 			vbar.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 			prefabsPane.removeAll();
+			inspectorPanel.hideInfo();
 			previewPanel.hideImage();
 		}
 		else{

@@ -106,7 +106,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		showGrid.setFont(DEFAULT_FONT);
 		showGrid.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
-		    	  
+		    	  ConstructorWindow.instance.workspace.showGrid(showGrid.isSelected());
 		      }
 		    });
 		
@@ -115,7 +115,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		showObjectsBorder.setFont(DEFAULT_FONT);
 		showObjectsBorder.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
-		    	  
+		    	  ConstructorWindow.instance.workspace.showObjectBorder(showObjectsBorder.isSelected());
 		      }
 		    });
 		
@@ -124,7 +124,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		showTileIndexes.setFont(DEFAULT_FONT);
 		showTileIndexes.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
-		    	  
+		    	  ConstructorWindow.instance.workspace.showTileIndex(showTileIndexes.isSelected());
 		      }
 		    });
 		
@@ -163,7 +163,7 @@ public class ConstructorMenuBar extends JMenuBar{
 	}
 	
 	private void onNewLevel_Click(){
-		ConstructorWindow.instance.revalidate();
+		ConstructorWindow.instance.workspace.setLevel(new Level(30,20));
 	}
 	
 	private void onSaveLevel_Click(){
