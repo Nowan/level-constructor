@@ -163,7 +163,9 @@ public class ConstructorMenuBar extends JMenuBar{
 	}
 	
 	private void onNewLevel_Click(){
-		ConstructorWindow.instance.workspace.setLevel(new Level(30,20));
+		ConstructorWindow.instance.workspace.setLevel(new Level(10,10));
+		showGrid.setSelected(true);
+		showObjectsBorder.setSelected(true);
 	}
 	
 	private void onSaveLevel_Click(){

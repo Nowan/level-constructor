@@ -1,37 +1,74 @@
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.SpringLayout;
 
 public class ToolsPanel extends JPanel{
 	
 	private ToolBox toolBox = Globals.toolBox;
-	private JButton insertionToolJB;
+	private JButton addTopRowJB;
+	private JButton removeTopRowJB;
+	private JButton addBottomRowJB;
+	private JButton removeBottomRowJB;
 	
 	public ToolsPanel(){
-		setPreferredSize(new Dimension(35,680));
+		setPreferredSize(new Dimension(29,680));
 		setSize(getPreferredSize());
 		setBorder(BorderFactory.createEtchedBorder());
+		SpringLayout slayout = new SpringLayout();
+		setLayout(slayout);
 		
-		insertionToolJB = new JButton();
-		insertionToolJB.setPreferredSize(new Dimension(25,25));
-		setITButtonActive(false);
+		addTopRowJB = new JButton("<html><body><div style=\"text-align: center;\">&#8657<br>+</div></body></html>");
+		addTopRowJB.setPreferredSize(new Dimension(24,60));
+		addTopRowJB.setContentAreaFilled(false);
+		addTopRowJB.setMargin(new Insets(0,0,0,0));
+		addTopRowJB.setFont(Globals.PARAMETER_FONT);
+		addTopRowJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				ConstructorWindow.instance.workspace.canvas.addLevelRow(true);
+			}});
 		
-		add(insertionToolJB);
-	}
-	
-	public void setITButtonActive(boolean state){
-		if(state){
-			insertionToolJB.setBackground(new Color(225,225,225));
-			insertionToolJB.setBorder(BorderFactory.createLoweredSoftBevelBorder());
-		}
-		else{
-			insertionToolJB.setBackground(new Color(230,230,230));;
-			insertionToolJB.setBorder(BorderFactory.createRaisedSoftBevelBorder());
-		}
+		removeTopRowJB = new JButton("<html><body><div style=\"text-align: center;\">&#8657<br>-</div></body></html>");
+		removeTopRowJB.setPreferredSize(new Dimension(24,60));
+		removeTopRowJB.setContentAreaFilled(false);
+		removeTopRowJB.setMargin(new Insets(0,0,0,0));
+		removeTopRowJB.setFont(Globals.PARAMETER_FONT);
+		
+		addBottomRowJB = new JButton("<html><body><div style=\"text-align: center;\">+<br>&#8659</div></body></html>");
+		addBottomRowJB.setPreferredSize(new Dimension(24,60));
+		addBottomRowJB.setContentAreaFilled(false);
+		addBottomRowJB.setMargin(new Insets(0,0,0,0));
+		addBottomRowJB.setFont(Globals.PARAMETER_FONT);
+		addBottomRowJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				ConstructorWindow.instance.workspace.canvas.addLevelRow(false);
+			}});
+		
+		removeBottomRowJB = new JButton("<html><body><div style=\"text-align: center;\">-<br>&#8659</div></body></html>");
+		removeBottomRowJB.setPreferredSize(new Dimension(24,60));
+		removeBottomRowJB.setContentAreaFilled(false);
+		removeBottomRowJB.setMargin(new Insets(0,0,0,0));
+		removeBottomRowJB.setFont(Globals.PARAMETER_FONT);
+		
+		add(addTopRowJB);
+		slayout.putConstraint(SpringLayout.NORTH, removeTopRowJB, 
+				2, SpringLayout.SOUTH, addTopRowJB);
+		add(removeTopRowJB);
+		
+		slayout.putConstraint(SpringLayout.SOUTH, addBottomRowJB, 
+				0, SpringLayout.SOUTH, this);
+		add(addBottomRowJB);
+		
+		slayout.putConstraint(SpringLayout.SOUTH, removeBottomRowJB, 
+				4, SpringLayout.NORTH, addBottomRowJB);
+		add(removeBottomRowJB);
 	}
 }

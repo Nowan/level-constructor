@@ -90,6 +90,15 @@ public class Workspace extends JPanel{
 			//Counting the scale factor to make sure that tiles are using all available vertical space 
 			double sf = (ConstructorWindow.instance.workspace.getSize().getHeight())/(level.getHeight()*TILE_SIZE);
 			setScaleFactor(sf);
+			setLevelSize(level.getWidth(),level.getHeight());
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0; l<level.getHeight();l++)
+					indexMap[c][l]=-1;
+			
+		}
+		
+		private void setLevelSize(int width,int height){
+			level.setSize(width,height);
 			setPreferredSize(new Dimension((int)(level.getWidth()*scaledTileSize)+1,(int)(level.getHeight()*scaledTileSize)+1));
 			setSize(getPreferredSize());
 			workspacePointer.setPreferredSize(new Dimension(getSize()));
@@ -100,12 +109,43 @@ public class Workspace extends JPanel{
 			scaledLevelImage=new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_ARGB);
 			//initializing empty indexMap
 			indexMap=new int[level.getWidth()][level.getHeight()];
-			for(int c=0;c<level.getWidth();c++)
-				for(int l=0; l<level.getHeight();l++)
-					indexMap[c][l]=-1;
 			
 			revalidate();
 			repaint();
+		}
+		
+		public void addLevelRow(boolean onFirstPosition){
+			//saving indexMap before resizing
+			int [][] indexMapBackup=new int [level.getWidth()][level.getHeight()];
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					indexMapBackup[c][l]=indexMap[c][l];
+			//resizing level workspace, generating new indexMap
+			setLevelSize(level.getWidth(),level.getHeight()+1);
+			
+			if(onFirstPosition){
+				for(GameObject go : level.getObjects())
+					go.setPosition(go.getPosition().x, go.getPosition().y+1);
+			}
+			updateLevelImage();
+			
+			//refilling indexMap
+			if(onFirstPosition){
+				for(int c=0;c<level.getWidth();c++)
+					for(int l=0;l<level.getHeight();l++)
+						if(l==0)
+							indexMap[c][l]=-1;
+						else
+							indexMap[c][l]=indexMapBackup[c][l-1];
+			}
+			else{
+				for(int c=0;c<level.getWidth();c++)
+					for(int l=0;l<level.getHeight();l++)
+						if(l==level.getHeight()-1)
+							indexMap[c][l]=-1;
+						else
+							indexMap[c][l]=indexMapBackup[c][l];
+			}
 		}
 		
 		private void setScaleFactor(double scaleFactor){
@@ -137,14 +177,16 @@ public class Workspace extends JPanel{
 				g2d.drawImage(go.getTexture(), posX, posY, null);
 				
 				if(showObjectBorder){
-					g2d.setColor(Color.BLACK);
+					g2d.setColor(Color.BLUE);
 					g2d.drawRect(posX, posY, width, height);
+					g2d.setColor(Color.BLACK);
 					}
 			}
 			double sf = getPreferredSize().getHeight()/levelImage.getHeight();
 			scaledLevelImage=resizeImage(levelImage,sf);
 		}
 		
+		//returns tile column and line indexes on selected position
 		private Point getTilePositionAt(int x, int y){
 			int columnIndex = x/scaledTileSize;
 			int lineIndex = y/scaledTileSize;
@@ -247,6 +289,7 @@ public class Workspace extends JPanel{
 			activeTile=new Point(getTilePositionAt(arg0.getX(),arg0.getY()));
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
+			repaint();
 		}
 
 		@Override public void mouseExited(MouseEvent arg0) {
@@ -260,11 +303,15 @@ public class Workspace extends JPanel{
 				boolean overlapsSmth = false;
 				int prefabWidth = Globals.toolBox.insertionTool.getPrefab().getTiledWidth();
 				int prefabHeight = Globals.toolBox.insertionTool.getPrefab().getTiledHeight();
+				
+				if(activeTile.x+prefabWidth>level.getWidth()||activeTile.y+prefabHeight>level.getHeight())
+					overlapsSmth=true;
+				else
 				for(int c=0;c<prefabWidth;c++)
-					for(int l=0;l<prefabHeight;l++)
+					for(int l=0;l<prefabHeight;l++){
 						if(indexMap[activeTile.x+c][activeTile.y+l]!=-1)
 							overlapsSmth=true;
-				
+					}
 				if(!overlapsSmth){
 					//Insert new object to the level
 					level.getObjects().add(new GameObject(Globals.toolBox.insertionTool.getPrefab(),activeTile.x,activeTile.y));

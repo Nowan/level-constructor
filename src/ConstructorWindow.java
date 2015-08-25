@@ -27,7 +27,7 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 	public CollectionsPanel collectionsPanel;
 	public Workspace workspace;
 	public JScrollPane workspaceContainer;
-	//public ToolsPanel toolsPanel;
+	public ToolsPanel toolsPanel;
 	
 	private ConstructorWindow(){
 		super("Mending Rush - level constructor");
@@ -41,13 +41,13 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 		goManager= new GOManagerWindow();
 		setJMenuBar(new ConstructorMenuBar());
 		
-		//toolsPanel = new ToolsPanel();
+		toolsPanel = new ToolsPanel();
 		collectionsPanel=new CollectionsPanel();
 		workspace = new Workspace();
 		workspaceContainer=new JScrollPane(workspace);
 		workspaceContainer.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		workspaceContainer.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		//add(toolsPanel,BorderLayout.LINE_START);
+		add(toolsPanel,BorderLayout.LINE_START);
 		add(workspaceContainer,BorderLayout.CENTER);
 		add(collectionsPanel,BorderLayout.LINE_END);
 		
