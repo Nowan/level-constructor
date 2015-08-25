@@ -1,5 +1,7 @@
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class Level {
 
@@ -63,11 +65,23 @@ public class Level {
 		@Override 
 		public boolean add(GameObject e){
 			boolean returnBit = super.add(e);
-			//setting object indexes in canvas.indexMap
+			//sort array so the elements will be drawn in the right order
+			Collections.sort(this, new Comparator<GameObject>() {
+		        @Override
+		        public int compare(GameObject gameObject1, GameObject  gameObject2)
+		        {
+		        	int c1 = gameObject1.getPosition().y+gameObject1.getPosition().x*getHeight();
+		        	int c2 = gameObject2.getPosition().y+gameObject2.getPosition().x*getHeight();
+		            return Integer.compare(c2, c1);
+		        }
+		    });
+			//rebuild index map in canvas
 			int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
-			for(int c=0;c<e.getTiledWidth();c++)
-				for(int l=0;l<e.getTiledHeight();l++)
-					indexMap[e.getPosition().x+c][e.getPosition().y+l]=this.size()-1;
+			for(int i=0;i<this.size();i++)
+				for(int c=0;c<this.get(i).getTiledWidth();c++)
+					for(int l=0;l<this.get(i).getTiledHeight();l++){
+						indexMap[this.get(i).getPosition().x+c][this.get(i).getPosition().y+l]=i;
+					}
 			return returnBit;
 		}
 		

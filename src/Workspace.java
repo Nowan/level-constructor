@@ -13,6 +13,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -155,6 +157,8 @@ public class Workspace extends JPanel{
 		}
 		
 		public void removeLevelRow(boolean onFirstPosition){
+			if(level.getHeight()-1<level.getDefaultHeight())
+				return;
 			//saving indexMap before resizing
 			int [][] indexMapBackup=new int [level.getWidth()][level.getHeight()-1];
 			for(int c=0;c<level.getWidth();c++)
@@ -185,7 +189,7 @@ public class Workspace extends JPanel{
 			}
 			else
 				for(GameObject go : level.getObjects())
-					if(go.getPosition().getY()==level.getHeight()-1)
+					if(go.getPosition().getY()+go.getTiledHeight()==level.getHeight()+1)
 						objectsToRemove.add(go);
 			
 			for(GameObject go : objectsToRemove){
@@ -251,6 +255,7 @@ public class Workspace extends JPanel{
 				return;
 			Graphics2D g2d = levelImage.createGraphics();
 			g2d.fillRect(0, 0, levelImage.getWidth(), levelImage.getHeight());
+			
 			for(GameObject go : level.getObjects()){
 				int posX=(int)go.getPosition().getX()*TILE_SIZE;
 				int posY=(int)go.getPosition().getY()*TILE_SIZE;

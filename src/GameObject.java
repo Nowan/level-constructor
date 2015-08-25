@@ -44,4 +44,5 @@ public class GameObject{
 		this.column = point.x;
 		this.line = point.y;
 	}
+
 }
