@@ -31,6 +31,10 @@ public class GameObject{
 		return new Point(column,line);
 	}
 	
+	public Prefab getPrefab(){
+		return prefab;
+	}
+	
 	public void setPosition(int column, int line){
 		this.column=column;
 		this.line=line;

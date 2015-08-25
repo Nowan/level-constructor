@@ -43,7 +43,7 @@ public class Workspace extends JPanel{
 	}
 	
 	public void showGrid(boolean flag){ this.showGrid=flag; canvas.repaint(); }
-	public void showObjectBorder(boolean flag){ this.showObjectBorder=flag; canvas.repaint(); }
+	public void showObjectBorder(boolean flag){ this.showObjectBorder=flag; canvas.updateLevelImage(); canvas.repaint(); }
 	public void showTileIndex(boolean flag){ this.showTileIndex=flag; canvas.repaint(); }
 	
 	public void setLevel(Level level){
@@ -52,7 +52,7 @@ public class Workspace extends JPanel{
 		addMouseWheelListener(canvas);
 	}
 
-	private class Canvas extends JPanel implements MouseWheelListener, MouseListener, MouseMotionListener{
+	public class Canvas extends JPanel implements MouseWheelListener, MouseListener, MouseMotionListener{
 		
 		private Level level;
 		
@@ -62,16 +62,21 @@ public class Workspace extends JPanel{
 		private double scaleFactor;
 		private int scaledTileSize;
 		
+		//Contains indexes of the tile cursor currently points on
 		private Point activeTile;
 		
 		//Optimization. Image with painted level objects
 		//Changes only when objects are added to or removed from level data
 		private BufferedImage levelImage;
-		private BufferedImage resizedLevelImage;
+		private BufferedImage scaledLevelImage;
 		
 		//Optimization. Resized image of tile, selected in insertion tool
 		//Changes only when new tile is chosen or scaleFactor changes
 		private BufferedImage resizedTile;
+		
+		//Contains indexes of game objects in level.gameObjects array
+		// -1 means empty tile
+		public int [][] indexMap;
 		
 		public Canvas(){
 			setBackground(Color.GRAY);
@@ -89,9 +94,15 @@ public class Workspace extends JPanel{
 			setSize(getPreferredSize());
 			workspacePointer.setPreferredSize(new Dimension(getSize()));
 			setBackground(Color.WHITE);
+			//setting original levelImage size to the usual, non-scaled, size of level
 			levelImage=new BufferedImage((int)(level.getWidth()*TILE_SIZE)+1, (int)(level.getHeight()*TILE_SIZE)+1, BufferedImage.TYPE_INT_ARGB);
-			resizedLevelImage=new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_ARGB);
-			
+			//setting scaled levelImage size to fit size of canvas
+			scaledLevelImage=new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			//initializing empty indexMap
+			indexMap=new int[level.getWidth()][level.getHeight()];
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0; l<level.getHeight();l++)
+					indexMap[c][l]=-1;
 			
 			revalidate();
 			repaint();
@@ -107,11 +118,8 @@ public class Workspace extends JPanel{
 			setSize(getPreferredSize());
 			workspacePointer.setPreferredSize(new Dimension(getSize()));
 			double sf = getPreferredSize().getHeight()/levelImage.getHeight();
-			resizedLevelImage=resizeImage(levelImage,sf);
+			scaledLevelImage=resizeImage(levelImage,sf);
 
-			System.out.println("= timer starts =");
-			
-			//updateLevelImage();
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
 		}
@@ -134,7 +142,7 @@ public class Workspace extends JPanel{
 					}
 			}
 			double sf = getPreferredSize().getHeight()/levelImage.getHeight();
-			resizedLevelImage=resizeImage(levelImage,sf);
+			scaledLevelImage=resizeImage(levelImage,sf);
 		}
 		
 		private Point getTilePositionAt(int x, int y){
@@ -157,31 +165,12 @@ public class Workspace extends JPanel{
 			return resizedImage;
 		}
 		
-		private void enlightItem(){
-			Timer timer = new Timer();
-		    timer.schedule(new TimerTask(){
-		    	
-		    	private int counter=0;
-		    	private boolean lighted=false;
-		    	
-				@Override
-				public void run() {
-					if(counter==6){
-						this.cancel();
-						}
-					else{
-						if(lighted){
-							//targetTMI.setBorder(BorderFactory.createEmptyBorder());
-							lighted=false;
-							}
-						else{
-							//targetTMI.setBorder(BorderFactory.createLineBorder(Color.RED,2));
-							lighted=true;
-						}
-						counter++;
-					}
-					}
-		    }, 0,75);
+		private Point getObjectMainTile(int objectIndex){
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					if(indexMap[c][l]==objectIndex)
+						return new Point(c,l);
+			return null;
 		}
 		
 		@Override
@@ -190,7 +179,7 @@ public class Workspace extends JPanel{
 			Graphics2D g2d = (Graphics2D)g;
 			
 			if(level!=null&&!level.getObjects().isEmpty())
-				g2d.drawImage(resizedLevelImage, 0, 0, null);
+				g2d.drawImage(scaledLevelImage, 0, 0, null);
 			if(showGrid){
 				g2d.setColor(Color.GRAY);
 				g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));
@@ -205,11 +194,10 @@ public class Workspace extends JPanel{
 			}
 			
 			if(showTileIndex){
-				g2d.setColor(Color.GRAY);
 				for(int h=1;h<=level.getHeight();h++){
 					for(int w=1;w<=level.getWidth();w++){
 						Point tile = getTilePositionAt(w*scaledTileSize,h*scaledTileSize);
-						String tileIndex = "["+(int)tile.getX()+";"+(int)tile.getY()+"]";
+						String tileIndex = "["+(int)(tile.getX()-1)+";"+(int)(tile.getY()-1)+"]";
 						int posX=(int)tile.getX()*scaledTileSize-scaledTileSize/2 - tileIndex.length()*3;
 						int posY=(int)(tile.getY()*scaledTileSize-scaledTileSize/2 + 5);
 						g2d.drawString(tileIndex, posX, posY);
@@ -222,13 +210,23 @@ public class Workspace extends JPanel{
 			if(activeTile!=null){
 				int posX=(int)activeTile.getX()*scaledTileSize;
 				int posY=(int)activeTile.getY()*scaledTileSize;
+				//if insertion tool is active - draw selected prefab texture on activeTile position
 				if(Globals.toolBox.insertionTool.isActive()){
 					Prefab prefab = Globals.toolBox.insertionTool.getPrefab();
 					g2d.drawImage(resizedTile, posX, posY, null);
 					g2d.drawRect(posX, posY, prefab.getTiledWidth()*scaledTileSize, prefab.getTiledHeight()*scaledTileSize);
 				}
-				else 
-					g2d.drawRect(posX, posY, scaledTileSize, scaledTileSize);
+				else {
+					//if tile is not empty
+					if(indexMap[activeTile.x][activeTile.y]!=-1){
+						int width = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledWidth()*scaledTileSize;
+						int height = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledHeight()*scaledTileSize;
+						Point mainTilePosition = getObjectMainTile(indexMap[activeTile.x][activeTile.y]);
+						g2d.drawRect(mainTilePosition.x*scaledTileSize, mainTilePosition.y*scaledTileSize, width, height);
+					}
+					else
+						g2d.drawRect(posX, posY, scaledTileSize, scaledTileSize);
+					}
 			}
 		}
 
@@ -259,11 +257,20 @@ public class Workspace extends JPanel{
 
 		@Override public void mousePressed(MouseEvent arg0) {
 			if(arg0.getButton()==MouseEvent.BUTTON1&&Globals.toolBox.insertionTool.isActive()){
-				//Insert new object to the level
-				level.getObjects().add(new GameObject(Globals.toolBox.insertionTool.getPrefab(),activeTile.x,activeTile.y));
-				System.out.println("tile inserted at "+activeTile.toString());
-				updateLevelImage();
-				repaint();
+				boolean overlapsSmth = false;
+				int prefabWidth = Globals.toolBox.insertionTool.getPrefab().getTiledWidth();
+				int prefabHeight = Globals.toolBox.insertionTool.getPrefab().getTiledHeight();
+				for(int c=0;c<prefabWidth;c++)
+					for(int l=0;l<prefabHeight;l++)
+						if(indexMap[activeTile.x+c][activeTile.y+l]!=-1)
+							overlapsSmth=true;
+				
+				if(!overlapsSmth){
+					//Insert new object to the level
+					level.getObjects().add(new GameObject(Globals.toolBox.insertionTool.getPrefab(),activeTile.x,activeTile.y));
+					updateLevelImage();
+					repaint();
+				}
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON2){
 				setScaleFactor(1.0);
@@ -272,22 +279,41 @@ public class Workspace extends JPanel{
 				repaint();
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON3){
-				if(Globals.toolBox.insertionTool.isActive())
+				if(Globals.toolBox.insertionTool.isActive()){
 					Globals.toolBox.insertionTool.disable();
-				resizedTile=null;
+					ConstructorWindow.instance.collectionsPanel.tilesTab.removeSelection();
+					resizedTile=null;
+				}
+				else
+					if(indexMap[activeTile.x][activeTile.y]!=-1){
+						//deleting the object from level and indexMap 
+						level.getObjects().remove(indexMap[activeTile.x][activeTile.y]);
+						updateLevelImage();
+						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(null);
+					}
 				repaint();
 			}
 		}
 
 		@Override public void mouseReleased(MouseEvent arg0) {}
 
-		@Override public void mouseDragged(MouseEvent e) {}
+		@Override public void mouseDragged(MouseEvent e) {
+			
+		}
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
 			Point tile = getTilePositionAt(e.getX(),e.getY());
 			if(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()){
 				activeTile.setLocation(tile);
+				//if tile is not empty
+				if(indexMap[activeTile.x][activeTile.y]!=-1){
+					Prefab prefab = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab();
+					ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
+				}
+				else{
+					ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(Globals.toolBox.insertionTool.getPrefab());
+				}
 				repaint();
 			}
 		}

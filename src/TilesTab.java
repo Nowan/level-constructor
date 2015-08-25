@@ -105,18 +105,27 @@ public class TilesTab extends JPanel{
 		Globals.toolBox.insertionTool.disable();
 		selectedItem.setBorder(BorderFactory.createEmptyBorder());
 		selectedItem = null;
-		inspectorPanel.hideInfo();
-		previewPanel.hideImage();
+		showPrefabInfo(null);
 		//ConstructorWindow.instance.workspace.repaintLevel();
 	}
 	
 	public void selectItem(PrefabPreviewItem ppi){
 		ppi.setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
 		Globals.toolBox.insertionTool.invoke(ppi.prefab);
-		inspectorPanel.showInfo(ppi.prefab);
-		previewPanel.setImage(ppi.prefab.getTexture());
+		showPrefabInfo(ppi.prefab);
 		selectedItem = ppi;
 		ppi.repaint();
+	}
+	
+	public void showPrefabInfo(Prefab prefab){
+		if(prefab==null){
+			inspectorPanel.hideInfo();
+			previewPanel.hideImage();
+		}
+		else{
+			inspectorPanel.showInfo(prefab);
+			previewPanel.setImage(prefab.getTexture());
+		}
 	}
 	
 	public class InspectorPanel extends JPanel{
@@ -275,14 +284,10 @@ public class TilesTab extends JPanel{
 		public void onMouseOut(){
 			if(this.prefab!=Globals.toolBox.insertionTool.getPrefab())
 				this.setBorder(BorderFactory.createEmptyBorder());
-			if(Globals.toolBox.insertionTool.isActive()){
-				inspectorPanel.showInfo(Globals.toolBox.insertionTool.getPrefab());
-				previewPanel.setImage(Globals.toolBox.insertionTool.getPrefab().getTexture());
-				}
-			else {
-				inspectorPanel.hideInfo();
-				previewPanel.hideImage();
-				}
+			if(Globals.toolBox.insertionTool.isActive())
+				showPrefabInfo(Globals.toolBox.insertionTool.getPrefab());
+			else
+				showPrefabInfo(null);
 		}
 		
 		public void onMouseClick(){
