@@ -35,7 +35,7 @@ public class ToolsPanel extends JPanel{
 				ConstructorWindow.instance.workspace.canvas.addLevelRow(true);
 			}});
 		
-		removeTopRowJB = new JButton("<html><body><div style=\"text-align: center;\">&#8657<br>-</div></body></html>");
+		removeTopRowJB = new JButton("<html><body><div style=\"text-align: center;\">-<br>&#8659</div></body></html>");
 		removeTopRowJB.setPreferredSize(new Dimension(24,60));
 		removeTopRowJB.setContentAreaFilled(false);
 		removeTopRowJB.setMargin(new Insets(0,0,0,0));
@@ -57,7 +57,7 @@ public class ToolsPanel extends JPanel{
 				ConstructorWindow.instance.workspace.canvas.addLevelRow(false);
 			}});
 		
-		removeBottomRowJB = new JButton("<html><body><div style=\"text-align: center;\">-<br>&#8659</div></body></html>");
+		removeBottomRowJB = new JButton("<html><body><div style=\"text-align: center;\">&#8657<br>-</div></body></html>");
 		removeBottomRowJB.setPreferredSize(new Dimension(24,60));
 		removeBottomRowJB.setContentAreaFilled(false);
 		removeBottomRowJB.setMargin(new Insets(0,0,0,0));

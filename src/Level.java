@@ -9,9 +9,15 @@ public class Level {
 	
 	private int height;
 	
-	public Level(int width, int height){
+	private int defaultWidth;
+	
+	private int defaultHeight;
+	
+	public Level(int defaultWidth, int defaultHeight){
 		gameObjects = new GameObjects();
-		setSize(width,height);
+		this.defaultWidth = defaultWidth;
+		this.defaultHeight = defaultHeight;
+		setSize(defaultWidth,defaultHeight);
 	}
 	
 	public GameObjects getObjects(){
@@ -30,6 +36,14 @@ public class Level {
 	public void setSize(Dimension size){
 		this.width=size.width;
 		this.height=size.height;
+	}
+	
+	public int getDefaultWidth(){
+		return defaultWidth;
+	}
+	
+	public int getDefaultHeight(){
+		return defaultHeight;
 	}
 	
 	public int getWidth(){
@@ -96,6 +110,7 @@ public class Level {
 				int objectHeight=get(i).getTiledHeight();
 				for(int c=0;c<objectWidth;c++)
 					for(int l=0;l<objectHeight;l++)
+						if(get(i).getPosition().x+c<ConstructorWindow.instance.globals.level.getWidth()&&get(i).getPosition().y+l<ConstructorWindow.instance.globals.level.getHeight())
 						indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
 			}
 			return returnObject;

@@ -79,6 +79,9 @@ public class Workspace extends JPanel{
 		// -1 means empty tile
 		public int [][] indexMap;
 		
+		//Number of columns which are incerted to level
+		private int defaultColInsertValue = 5;
+		
 		public Canvas(){
 			setBackground(Color.GRAY);
 			addMouseWheelListener(this);
@@ -189,6 +192,42 @@ public class Workspace extends JPanel{
 				level.getObjects().remove(go);
 			}
 			updateLevelImage();
+		}
+		
+		public void addLevelCols(int colNumber){
+			//saving indexMap before resizing
+			int [][] indexMapBackup=new int [level.getWidth()][level.getHeight()];
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					indexMapBackup[c][l]=indexMap[c][l];
+			//resizing level workspace, generating new indexMap
+			setLevelSize(level.getWidth()+colNumber,level.getHeight());
+			updateLevelImage();
+			
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					if(c>=level.getWidth()-colNumber)
+						//filling new columns with empty indexes
+						indexMap[c][l]=-1;
+					else
+						indexMap[c][l]=indexMapBackup[c][l];
+		}
+		
+		public void removeLevelCols(int colNumber){
+			//saving indexMap before resizing
+			int [][] indexMapBackup=new int [level.getWidth()-colNumber][level.getHeight()];
+			for(int c=0;c<level.getWidth()-colNumber;c++)
+				for(int l=0;l<level.getHeight();l++)
+					indexMapBackup[c][l]=indexMap[c][l];
+			
+			//resizing level workspace, generating new indexMap
+			setLevelSize(level.getWidth()-colNumber,level.getHeight());
+			updateLevelImage();
+			
+			//refilling indexMap
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					indexMap[c][l]=indexMapBackup[c][l];
 		}
 		
 		private void setScaleFactor(double scaleFactor){
@@ -303,7 +342,7 @@ public class Workspace extends JPanel{
 				}
 				else {
 					//if tile is not empty
-					if(indexMap[activeTile.x][activeTile.y]!=-1){
+					if(indexMap[Math.min(activeTile.x,level.getWidth()-1)][Math.min(activeTile.y,level.getHeight()-1)]!=-1){
 						int width = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledWidth()*scaledTileSize;
 						int height = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledHeight()*scaledTileSize;
 						Point mainTilePosition = getObjectMainTile(indexMap[activeTile.x][activeTile.y]);
@@ -319,9 +358,9 @@ public class Workspace extends JPanel{
 		public void mouseWheelMoved(MouseWheelEvent arg0) {
 			setScaleFactor(scaleFactor-arg0.getWheelRotation()*0.04);
 			resize();
-			/*Point tile = getTilePositionAt(arg0.getX(),arg0.getY());
+			Point tile = getTilePositionAt(arg0.getX(),arg0.getY());
 			if(activeTile!=null&&(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()))
-				activeTile.setLocation(tile);*/
+				activeTile.setLocation(tile);
 			revalidate();
 			repaint();
 		}
@@ -347,15 +386,15 @@ public class Workspace extends JPanel{
 				int prefabWidth = Globals.toolBox.insertionTool.getPrefab().getTiledWidth();
 				int prefabHeight = Globals.toolBox.insertionTool.getPrefab().getTiledHeight();
 				
-				if(activeTile.x+prefabWidth>level.getWidth()||activeTile.y+prefabHeight>level.getHeight())
-					overlapsSmth=true;
-				else
 				for(int c=0;c<prefabWidth;c++)
 					for(int l=0;l<prefabHeight;l++){
-						if(indexMap[activeTile.x+c][activeTile.y+l]!=-1)
+						if(indexMap[Math.min(level.getWidth()-1, activeTile.x+c)][Math.min(level.getHeight()-1, activeTile.y+l)]!=-1)
 							overlapsSmth=true;
 					}
-				if(!overlapsSmth){
+				if(!overlapsSmth&&activeTile.y+prefabHeight<=level.getHeight()){
+					//if current level width is not enough to contain the object, add needed number of columns to the end of level
+					if(activeTile.x+prefabWidth>level.getWidth()-defaultColInsertValue)
+						addLevelCols((activeTile.x+prefabWidth)-(level.getWidth()-defaultColInsertValue));
 					//Insert new object to the level
 					level.getObjects().add(new GameObject(Globals.toolBox.insertionTool.getPrefab(),activeTile.x,activeTile.y));
 					updateLevelImage();
@@ -378,7 +417,19 @@ public class Workspace extends JPanel{
 					if(indexMap[activeTile.x][activeTile.y]!=-1){
 						//deleting the object from level and indexMap 
 						level.getObjects().remove(indexMap[activeTile.x][activeTile.y]);
-						updateLevelImage();
+						
+						//getting the last non-empty index
+						for(int c=level.getWidth()-1;c>=0;c--){
+							boolean indexFound = false;
+							for(int l=0;l<level.getHeight();l++)
+								if(indexMap[c][l]!=-1){
+									int colNumber = level.getWidth() - Math.max(c+defaultColInsertValue+1,level.getDefaultWidth());
+									removeLevelCols(colNumber);
+									indexFound=true;
+									break;
+								}
+							if(indexFound) break;
+						}
 						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(null);
 					}
 				repaint();
@@ -397,7 +448,7 @@ public class Workspace extends JPanel{
 			if(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()){
 				activeTile.setLocation(tile);
 				//if tile is not empty
-				if(indexMap[activeTile.x][activeTile.y]!=-1){
+				if(indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)]!=-1){
 					Prefab prefab = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab();
 					ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
 				}
