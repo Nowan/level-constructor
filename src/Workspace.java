@@ -12,6 +12,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -134,6 +135,7 @@ public class Workspace extends JPanel{
 				for(int c=0;c<level.getWidth();c++)
 					for(int l=0;l<level.getHeight();l++)
 						if(l==0)
+							//filling new row with empty indexes
 							indexMap[c][l]=-1;
 						else
 							indexMap[c][l]=indexMapBackup[c][l-1];
@@ -142,10 +144,51 @@ public class Workspace extends JPanel{
 				for(int c=0;c<level.getWidth();c++)
 					for(int l=0;l<level.getHeight();l++)
 						if(l==level.getHeight()-1)
+							//filling new row with empty indexes
 							indexMap[c][l]=-1;
 						else
 							indexMap[c][l]=indexMapBackup[c][l];
 			}
+		}
+		
+		public void removeLevelRow(boolean onFirstPosition){
+			//saving indexMap before resizing
+			int [][] indexMapBackup=new int [level.getWidth()][level.getHeight()-1];
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight()-1;l++)
+					if(onFirstPosition)
+						//saving all indexes except first row
+						indexMapBackup[c][l]=indexMap[c][l+1];
+					else
+						//saving all indexes except last row
+						indexMapBackup[c][l]=indexMap[c][l];
+			
+			//resizing level workspace, generating new indexMap
+			setLevelSize(level.getWidth(),level.getHeight()-1);
+			
+			//refilling indexMap
+			for(int c=0;c<level.getWidth();c++)
+				for(int l=0;l<level.getHeight();l++)
+					indexMap[c][l]=indexMapBackup[c][l];
+			
+			//contains indexes of objects in level.gameObjects, which will be removed
+			ArrayList<GameObject> objectsToRemove = new ArrayList<GameObject>();
+			if(onFirstPosition){
+				for(GameObject go : level.getObjects())
+					if(go.getPosition().getY()==0)
+						objectsToRemove.add(go);
+					else
+						go.setPosition(go.getPosition().x, go.getPosition().y-1);
+			}
+			else
+				for(GameObject go : level.getObjects())
+					if(go.getPosition().getY()==level.getHeight()-1)
+						objectsToRemove.add(go);
+			
+			for(GameObject go : objectsToRemove){
+				level.getObjects().remove(go);
+			}
+			updateLevelImage();
 		}
 		
 		private void setScaleFactor(double scaleFactor){
@@ -276,9 +319,9 @@ public class Workspace extends JPanel{
 		public void mouseWheelMoved(MouseWheelEvent arg0) {
 			setScaleFactor(scaleFactor-arg0.getWheelRotation()*0.04);
 			resize();
-			Point tile = getTilePositionAt(arg0.getX(),arg0.getY());
+			/*Point tile = getTilePositionAt(arg0.getX(),arg0.getY());
 			if(activeTile!=null&&(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()))
-				activeTile.setLocation(tile);
+				activeTile.setLocation(tile);*/
 			revalidate();
 			repaint();
 		}

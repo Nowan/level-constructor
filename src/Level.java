@@ -78,6 +78,28 @@ public class Level {
 			}
 			return returnObject;
 		}
+		
+		@Override
+		public boolean remove(Object o){
+			boolean returnObject = super.remove(o);
+			//setting object indexes in canvas.indexMap
+			int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
+			int levelWidth = ConstructorWindow.instance.globals.level.getWidth();
+			int levelHeight = ConstructorWindow.instance.globals.level.getHeight();
+			//clearing indexMap
+			for(int c=0;c<levelWidth;c++)
+				for(int l=0;l<levelHeight;l++)
+					indexMap[c][l]=-1;
+			//adding object indexes to indexMap
+			for(int i=0;i<size();i++){
+				int objectWidth=get(i).getTiledWidth();
+				int objectHeight=get(i).getTiledHeight();
+				for(int c=0;c<objectWidth;c++)
+					for(int l=0;l<objectHeight;l++)
+						indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
+			}
+			return returnObject;
+		}
 	}
 	
 }

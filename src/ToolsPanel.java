@@ -40,6 +40,11 @@ public class ToolsPanel extends JPanel{
 		removeTopRowJB.setContentAreaFilled(false);
 		removeTopRowJB.setMargin(new Insets(0,0,0,0));
 		removeTopRowJB.setFont(Globals.PARAMETER_FONT);
+		removeTopRowJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				ConstructorWindow.instance.workspace.canvas.removeLevelRow(true);
+			}});
 		
 		addBottomRowJB = new JButton("<html><body><div style=\"text-align: center;\">+<br>&#8659</div></body></html>");
 		addBottomRowJB.setPreferredSize(new Dimension(24,60));
@@ -57,6 +62,11 @@ public class ToolsPanel extends JPanel{
 		removeBottomRowJB.setContentAreaFilled(false);
 		removeBottomRowJB.setMargin(new Insets(0,0,0,0));
 		removeBottomRowJB.setFont(Globals.PARAMETER_FONT);
+		removeBottomRowJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				ConstructorWindow.instance.workspace.canvas.removeLevelRow(false);
+			}});
 		
 		add(addTopRowJB);
 		slayout.putConstraint(SpringLayout.NORTH, removeTopRowJB, 
