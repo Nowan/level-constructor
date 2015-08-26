@@ -52,10 +52,9 @@ public class Workspace extends JPanel{
 	public void setLevel(Level level){
 		ConstructorWindow.instance.globals.level = level;
 		canvas.generateLevel();
-		addMouseWheelListener(canvas);
 	}
 
-	public class Canvas extends JPanel implements MouseWheelListener, MouseListener, MouseMotionListener{
+	public class Canvas extends JPanel implements MouseListener, MouseMotionListener{
 		
 		private Level level;
 		
@@ -86,9 +85,9 @@ public class Workspace extends JPanel{
 		
 		public Canvas(){
 			setBackground(Color.GRAY);
-			addMouseWheelListener(this);
 			addMouseListener(this);
 			addMouseMotionListener(this);
+			setEnabled(false);
 		}
 		
 		public void generateLevel(){
@@ -100,7 +99,7 @@ public class Workspace extends JPanel{
 			for(int c=0;c<level.getWidth();c++)
 				for(int l=0; l<level.getHeight();l++)
 					indexMap[c][l]=-1;
-			
+			setEnabled(true);
 		}
 		
 		private void setLevelSize(int width,int height){
@@ -234,12 +233,12 @@ public class Workspace extends JPanel{
 					indexMap[c][l]=indexMapBackup[c][l];
 		}
 		
-		private void setScaleFactor(double scaleFactor){
+		public void setScaleFactor(double scaleFactor){
 			this.scaleFactor = scaleFactor;
 			this.scaledTileSize=(int)(TILE_SIZE*scaleFactor);
 		}
 		
-		private void resize(){
+		public void resize(){
 			setPreferredSize(new Dimension((int)(level.getWidth()*scaledTileSize)+1,(int)(level.getHeight()*scaledTileSize)+1));
 			setSize(getPreferredSize());
 			workspacePointer.setPreferredSize(new Dimension(getSize()));
@@ -248,6 +247,8 @@ public class Workspace extends JPanel{
 
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
+			revalidate();
+			workspacePointer.revalidate();
 		}
 		
 		private void updateLevelImage(){
@@ -359,20 +360,10 @@ public class Workspace extends JPanel{
 			}
 		}
 
-		@Override
-		public void mouseWheelMoved(MouseWheelEvent arg0) {
-			setScaleFactor(scaleFactor-arg0.getWheelRotation()*0.04);
-			resize();
-			Point tile = getTilePositionAt(arg0.getX(),arg0.getY());
-			if(activeTile!=null&&(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()))
-				activeTile.setLocation(tile);
-			revalidate();
-			repaint();
-		}
-
 		@Override public void mouseClicked(MouseEvent arg0) {}
 
 		@Override public void mouseEntered(MouseEvent arg0) {
+			if(!isEnabled()) return;
 			activeTile=new Point(getTilePositionAt(arg0.getX(),arg0.getY()));
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
@@ -380,12 +371,14 @@ public class Workspace extends JPanel{
 		}
 
 		@Override public void mouseExited(MouseEvent arg0) {
+			if(!isEnabled()) return;
 			activeTile = null;
 			resizedTile = null;
 			repaint();
 		}
 
 		@Override public void mousePressed(MouseEvent arg0) {
+			if(!isEnabled()) return;
 			if(arg0.getButton()==MouseEvent.BUTTON1&&Globals.toolBox.insertionTool.isActive()){
 				boolean overlapsSmth = false;
 				int prefabWidth = Globals.toolBox.insertionTool.getPrefab().getTiledWidth();
@@ -449,6 +442,7 @@ public class Workspace extends JPanel{
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
+			if(!isEnabled()) return;
 			Point tile = getTilePositionAt(e.getX(),e.getY());
 			if(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()){
 				activeTile.setLocation(tile);

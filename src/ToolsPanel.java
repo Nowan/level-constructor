@@ -7,7 +7,10 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.SpringLayout;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class ToolsPanel extends JPanel{
 	
@@ -16,6 +19,10 @@ public class ToolsPanel extends JPanel{
 	private JButton removeTopRowJB;
 	private JButton addBottomRowJB;
 	private JButton removeBottomRowJB;
+	private JSlider workspaceScaleJS;
+	private static final int SCALE_MIN = 50;
+	private static final int SCALE_MAX = 150;
+	private static final int SCALE_INIT = 100;
 	
 	public ToolsPanel(){
 		setPreferredSize(new Dimension(29,680));
@@ -68,6 +75,19 @@ public class ToolsPanel extends JPanel{
 				ConstructorWindow.instance.workspace.canvas.removeLevelRow(false);
 			}});
 		
+		workspaceScaleJS = new JSlider(JSlider.VERTICAL,SCALE_MIN, SCALE_MAX, SCALE_INIT);
+		workspaceScaleJS.setMajorTickSpacing(50);
+		workspaceScaleJS.setMinorTickSpacing(25);
+		workspaceScaleJS.setPaintTicks(true);
+		workspaceScaleJS.setPaintLabels(false);
+		workspaceScaleJS.setPreferredSize(new Dimension(20,400));
+		workspaceScaleJS.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				ConstructorWindow.instance.workspace.canvas.setScaleFactor((double)(workspaceScaleJS.getValue())/100);
+				ConstructorWindow.instance.workspace.canvas.resize();
+			}});
+		
 		add(addTopRowJB);
 		slayout.putConstraint(SpringLayout.NORTH, removeTopRowJB, 
 				2, SpringLayout.SOUTH, addTopRowJB);
@@ -80,5 +100,9 @@ public class ToolsPanel extends JPanel{
 		slayout.putConstraint(SpringLayout.SOUTH, removeBottomRowJB, 
 				4, SpringLayout.NORTH, addBottomRowJB);
 		add(removeBottomRowJB);
+		
+		slayout.putConstraint(SpringLayout.VERTICAL_CENTER, workspaceScaleJS, 
+				0, SpringLayout.VERTICAL_CENTER, this);
+		add(workspaceScaleJS);
 	}
 }
