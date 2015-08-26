@@ -57,7 +57,7 @@ public class Prefab {
 			return categoryID;
 		}
 		public PrefabCategory getCategory() {
-			return ConstructorWindow.globals.goBase.prefabCategoryBase.getCategoryByID(categoryID);
+			return GOBase.prefabCategoryBase.getCategoryByID(categoryID);
 		}
 		public void setCategory(String categoryID) {
 			this.categoryID = categoryID;

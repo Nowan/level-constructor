@@ -1,19 +1,10 @@
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-
 
 public class ConstructorWindow extends JFrame implements MouseListener{
 	
@@ -28,6 +19,7 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 	public Workspace workspace;
 	public JScrollPane workspaceContainer;
 	public ToolsPanel toolsPanel;
+	public ConstructorMenuBar menuBar;
 	
 	private ConstructorWindow(){
 		super("Mending Rush - level constructor");
@@ -39,7 +31,9 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 		addMouseListener(this);
 		
 		goManager= new GOManagerWindow();
-		setJMenuBar(new ConstructorMenuBar());
+		
+		menuBar=new ConstructorMenuBar();
+		setJMenuBar(menuBar);
 		
 		toolsPanel = new ToolsPanel();
 		collectionsPanel=new CollectionsPanel();
@@ -51,11 +45,18 @@ public class ConstructorWindow extends JFrame implements MouseListener{
 		add(workspaceContainer,BorderLayout.CENTER);
 		add(collectionsPanel,BorderLayout.LINE_END);
 		
+		setWorkingState(false);
+		
 		setVisible(true);
 	}
 
 	public static void main(String[] args) {}
 
+	public void setWorkingState(boolean flag){
+		menuBar.setWorkingState(flag);
+		toolsPanel.setWorkingState(flag);
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent evt) {}
 

@@ -84,7 +84,7 @@ public class Workspace extends JPanel{
 			level = ConstructorWindow.globals.level;
 			//Counting the scale factor to make sure that tiles are using all available vertical space 
 			double sf = (ConstructorWindow.instance.workspace.getSize().getHeight())/(level.getHeight()*TILE_SIZE);
-			setScaleFactor(sf);
+			//setScaleFactor(sf);
 			setLevelSize(level.getWidth(),level.getHeight());
 			updateLevelImage();
 			for(int c=0;c<level.getWidth();c++)
@@ -94,6 +94,7 @@ public class Workspace extends JPanel{
 			for(int c=0;c<level.getObjects().get(i).getTiledWidth();c++)
 				for(int l=0; l<level.getObjects().get(i).getTiledHeight();l++)
 					indexMap[level.getObjects().get(i).getPosition().x+c][level.getObjects().get(i).getPosition().y+l]=i;
+			ConstructorWindow.instance.toolsPanel.workspaceScaleJS.setValue((int)(sf*100));
 			setEnabled(true);
 		}
 		
@@ -399,10 +400,7 @@ public class Workspace extends JPanel{
 				}
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON2){
-				setScaleFactor(1.0);
-				resize();
-				revalidate();
-				repaint();
+				ConstructorWindow.instance.toolsPanel.workspaceScaleJS.setValue(100);
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON3){
 				if(Globals.toolBox.insertionTool.isActive()){

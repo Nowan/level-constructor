@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class GOBase{
 	
-	private XMLConverter xmlConverter = ConstructorWindow.instance.globals.xmlConverter;
+	private XMLConverter xmlConverter = Globals.xmlConverter;
 
 	public static PrefabsBase prefabsBase;
 	

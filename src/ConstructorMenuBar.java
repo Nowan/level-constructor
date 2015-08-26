@@ -1,4 +1,3 @@
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,7 +12,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 
 public class ConstructorMenuBar extends JMenuBar{
 	
@@ -39,6 +37,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		fileChooser=new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("XML file", new String[] {"xml"});
 		fileChooser.setFileFilter(filter);
+		fileChooser.setCurrentDirectory(new File("./bin/levels"));
 		
 		levelMenu = generateFileMenu();
 		workspaceMenu = generateWorkspaceMenu();
@@ -154,7 +153,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		goManager.setFont(DEFAULT_FONT);
 		goManager.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				ConstructorWindow.instance.goManager.setVisible(true);
+				ConstructorWindow.goManager.setVisible(true);
 			}
 		});
 		
@@ -163,8 +162,24 @@ public class ConstructorMenuBar extends JMenuBar{
 		return menu;
 	}
 	
+	public void setWorkingState(boolean flag){
+		showTileIndexes.setEnabled(flag);
+		showObjectsBorder.setEnabled(flag);
+		showGrid.setEnabled(flag);
+		saveLevel.setEnabled(flag);
+		if(flag){
+			
+		}
+		else{
+			showTileIndexes.setSelected(false);
+			showObjectsBorder.setSelected(false);
+			showGrid.setSelected(false);
+		}
+	}
+	
 	private void onNewLevel_Click(){
 		ConstructorWindow.instance.workspace.setLevel(new Level(30,12));
+		ConstructorWindow.instance.setWorkingState(true);
 		showGrid.setSelected(true);
 		showObjectsBorder.setSelected(true);
 	}
@@ -207,6 +222,7 @@ public class ConstructorMenuBar extends JMenuBar{
 	        	  return;
 	        }
 	        ConstructorWindow.instance.workspace.setLevel(level);
+	        ConstructorWindow.instance.setWorkingState(true);
 	  		showGrid.setSelected(true);
 	  		showObjectsBorder.setSelected(true);
 		}

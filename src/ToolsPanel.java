@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -14,12 +13,11 @@ import javax.swing.event.ChangeListener;
 
 public class ToolsPanel extends JPanel{
 	
-	private ToolBox toolBox = Globals.toolBox;
 	private JButton addTopRowJB;
 	private JButton removeTopRowJB;
 	private JButton addBottomRowJB;
 	private JButton removeBottomRowJB;
-	private JSlider workspaceScaleJS;
+	public JSlider workspaceScaleJS;
 	private static final int SCALE_MIN = 50;
 	private static final int SCALE_MAX = 150;
 	private static final int SCALE_INIT = 100;
@@ -104,5 +102,13 @@ public class ToolsPanel extends JPanel{
 		slayout.putConstraint(SpringLayout.VERTICAL_CENTER, workspaceScaleJS, 
 				0, SpringLayout.VERTICAL_CENTER, this);
 		add(workspaceScaleJS);
+	}
+	
+	public void setWorkingState(boolean flag){
+		addTopRowJB.setEnabled(flag);
+		removeTopRowJB.setEnabled(flag);
+		addBottomRowJB.setEnabled(flag);
+		removeBottomRowJB.setEnabled(flag);
+		workspaceScaleJS.setEnabled(flag);
 	}
 }

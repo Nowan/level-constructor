@@ -27,9 +27,7 @@ public class Level {
 	}
 	
 	public void setObjects(ArrayList<GameObject> gameObjects){
-		ConstructorWindow.instance.workspace.canvas.indexMap =new int [width][height];
-		int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
-
+		ConstructorWindow.instance.workspace.canvas.indexMap = new int [width][height];
 		for(GameObject go : gameObjects)
 			this.gameObjects.add(go);
 	}

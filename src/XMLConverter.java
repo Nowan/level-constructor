@@ -275,8 +275,6 @@ public class XMLConverter {
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 					Element eElement = (Element) nNode;
 					
-					System.out.println(GOBase.prefabsBase.get(eElement.getAttribute("prefab")).getTiledWidth());
-					//System.out.println(eElement.getAttribute("prefab"));
 					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("prefab"));
 					int posX = Integer.valueOf(eElement.getAttribute("posx"));
 					int posY = Integer.valueOf(eElement.getAttribute("posy"));
