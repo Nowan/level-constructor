@@ -2,14 +2,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -19,13 +13,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -38,18 +29,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpringLayout;
 
 public class GOManagerWindow extends JDialog{
 	
-	private final Font DEFAULT_FONT = new Font("Verdana", Font.PLAIN,11);
-	private final Font INDEX_FONT = new Font("Calibri", Font.BOLD, 26);
-	private final Font PARAMETER_FONT = new Font("Calibri", Font.PLAIN,13);
-	
-	private GOBase goBase = ConstructorWindow.instance.globals.goBase;
-	private XMLConverter xmlConverter = ConstructorWindow.instance.globals.xmlConverter;
+	private XMLConverter xmlConverter = Globals.xmlConverter;
 	
 	//if true, all the textboxes are editable, Cancel and Save button appears, Edit button is hided
 	private boolean editMode = false;
@@ -60,7 +46,7 @@ public class GOManagerWindow extends JDialog{
 	private Prefab currentlyShowedPrefab;
 	
 	private DefaultListModel<String> listModel;
-	private JList prefabsList;
+	private JList<String> prefabsList;
 	
 	private JPanel prefabParametersJP;
 	private JTextField indexJTF;
@@ -82,8 +68,8 @@ public class GOManagerWindow extends JDialog{
 		
 		add(generateContent());
 		setJMenuBar(generateMenuBar());
-		if(goBase.prefabsBase.size()!=0)
-			showPrefabAttributes(goBase.prefabsBase.get(0).getPrefabID());
+		if(GOBase.prefabsBase.size()!=0)
+			showPrefabAttributes(GOBase.prefabsBase.get(0).getPrefabID());
 		
 		setVisible(false);
 	}
@@ -95,33 +81,23 @@ public class GOManagerWindow extends JDialog{
 		panel.setLayout(slayout1);
 		
 		listModel = new DefaultListModel<String>();
-		for(Prefab p : goBase.prefabsBase)
+		for(Prefab p : GOBase.prefabsBase)
 			listModel.addElement(p.getPrefabID());
 		prefabsList = new JList<String>(listModel);
 		prefabsList.setSelectedIndex(0);
 		prefabsList.addMouseListener(new MouseListener(){
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
+			@Override public void mouseClicked(MouseEvent arg0) {}
 
-			@Override
-			public void mouseEntered(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
+			@Override public void mouseEntered(MouseEvent arg0) {}
 
 			@Override
 			public void mouseExited(MouseEvent arg0) {
-				// TODO Auto-generated method stub
 				if(!multiplySelection && prefabsList.getSelectedValue().toString()!=currentlyShowedPrefab.getPrefabID())
 					showPrefabAttributes(prefabsList.getSelectedValue().toString());
 			}
 
 			@Override
 			public void mousePressed(MouseEvent arg0) {
-				// TODO Auto-generated method stub
 				if(!editMode){
 					if(prefabsList.getSelectedIndices().length>1)
 						setMultiplySelection(true);
@@ -129,32 +105,20 @@ public class GOManagerWindow extends JDialog{
 						setMultiplySelection(false);
 				}
 			}
-
-			@Override
-			public void mouseReleased(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
+			
+			@Override public void mouseReleased(MouseEvent arg0) {}
 		});
 		prefabsList.addMouseMotionListener(new MouseMotionListener(){
+			@Override
+			public void mouseDragged(MouseEvent e) {}
 
 			@Override
-			public void mouseDragged(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				// TODO Auto-generated method stub
-				onMouseMoved(e);
-			}
-			
+			public void mouseMoved(MouseEvent e) { onMouseMoved(e); }
 		});
 		
 		JScrollPane prefabsScrollPane = new JScrollPane(prefabsList);
 		prefabsScrollPane.setPreferredSize(new Dimension(180, 448));
-		prefabsScrollPane.setHorizontalScrollBarPolicy(prefabsScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		prefabsScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		//Generating panel of chosen prefab parameters
 		prefabParametersJP = new JPanel();
@@ -165,7 +129,7 @@ public class GOManagerWindow extends JDialog{
 		
 		//components, displayed when only one item is selected 
 		indexJTF = new JTextField("Index");
-		indexJTF.setFont(INDEX_FONT);
+		indexJTF.setFont(Globals.INDEX_FONT);
 		indexJTF.setPreferredSize(new Dimension(prefabParametersJP.getPreferredSize().width,60));
 		indexJTF.setHorizontalAlignment(JTextField.CENTER);
 		indexJTF.setEnabled(false);
@@ -176,7 +140,7 @@ public class GOManagerWindow extends JDialog{
 		
 		editJB = new JButton("Edit");
 		editJB.setPreferredSize(new Dimension(prefabParametersJP.getPreferredSize().width/2,25));
-		editJB.setFont(DEFAULT_FONT);
+		editJB.setFont(Globals.DEFAULT_FONT);
 		editJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -186,7 +150,7 @@ public class GOManagerWindow extends JDialog{
 		
 		deleteJB = new JButton("Delete");
 		deleteJB.setPreferredSize(new Dimension(prefabParametersJP.getPreferredSize().width/2,25));
-		deleteJB.setFont(DEFAULT_FONT);
+		deleteJB.setFont(Globals.DEFAULT_FONT);
 		deleteJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -195,7 +159,7 @@ public class GOManagerWindow extends JDialog{
 		});
 		
 		selectedItemsJL = new JLabel("Selected items");
-		selectedItemsJL.setFont(DEFAULT_FONT);
+		selectedItemsJL.setFont(Globals.DEFAULT_FONT);
 		
 		//adding components to the panel
 		
@@ -227,10 +191,10 @@ public class GOManagerWindow extends JDialog{
 		JMenuBar menu = new JMenuBar();
 		
 		JMenu newJM = new JMenu("New");
-		newJM.setFont(DEFAULT_FONT);
+		newJM.setFont(Globals.DEFAULT_FONT);
 		
 		JMenuItem prefabJMI = new JMenuItem("Prefab");
-		prefabJMI.setFont(DEFAULT_FONT);
+		prefabJMI.setFont(Globals.DEFAULT_FONT);
 		prefabJMI.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -239,16 +203,16 @@ public class GOManagerWindow extends JDialog{
 		});
 		
 		JMenuItem particleJMI = new JMenuItem("Particle");
-		particleJMI.setFont(DEFAULT_FONT);
+		particleJMI.setFont(Globals.DEFAULT_FONT);
 		
 		JMenuItem backgroundJMI = new JMenuItem("Background");
-		backgroundJMI.setFont(DEFAULT_FONT);
+		backgroundJMI.setFont(Globals.DEFAULT_FONT);
 		
 		JMenu manageJM = new JMenu("Manage");
-		manageJM.setFont(DEFAULT_FONT);
+		manageJM.setFont(Globals.DEFAULT_FONT);
 		
 		JMenuItem categoryManagerJMI = new JMenuItem("Categories");
-		categoryManagerJMI.setFont(DEFAULT_FONT);
+		categoryManagerJMI.setFont(Globals.DEFAULT_FONT);
 		categoryManagerJMI.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -258,9 +222,9 @@ public class GOManagerWindow extends JDialog{
 		
 		JSeparator separator = new JSeparator();
 		JLabel showCategoryJL = new JLabel("Show category: ");
-		showCategoryJL.setFont(DEFAULT_FONT);
-		JComboBox categoryJCB = new JComboBox();
-		categoryJCB.setFont(DEFAULT_FONT);
+		showCategoryJL.setFont(Globals.DEFAULT_FONT);
+		JComboBox<String> categoryJCB = new JComboBox<String>();
+		categoryJCB.setFont(Globals.DEFAULT_FONT);
 		
 		newJM.add(prefabJMI);
 		newJM.add(particleJMI);
@@ -276,7 +240,7 @@ public class GOManagerWindow extends JDialog{
 	}
 	
 	private void showPrefabAttributes(String prefabID){
-		currentlyShowedPrefab=goBase.prefabsBase.get(prefabID);
+		currentlyShowedPrefab=GOBase.prefabsBase.get(prefabID);
 		indexJTF.setText(currentlyShowedPrefab.getPrefabID());
 		displayPrefabJP.setImage(currentlyShowedPrefab.getTexture());
 		
@@ -323,7 +287,7 @@ public class GOManagerWindow extends JDialog{
 			    "Message",
 			    JOptionPane.YES_NO_OPTION);
 		if(n==0){
-			goBase.prefabsBase.remove(currentlyShowedPrefab);
+			GOBase.prefabsBase.remove(currentlyShowedPrefab);
 			xmlConverter.savePrefabBase();
 			try{
 				Files.delete(Paths.get("src/"+currentlyShowedPrefab.getTextureAddress()));
@@ -339,7 +303,7 @@ public class GOManagerWindow extends JDialog{
 	
 	private void onMouseMoved(MouseEvent e){
 		if(!editMode && !multiplySelection){
-			String[] collection = goBase.prefabsBase.getIDCollection();
+			String[] collection = GOBase.prefabsBase.getIDCollection();
 			int index = prefabsList.locationToIndex(e.getPoint());
 			if(collection[index]!=currentlyShowedPrefab.getPrefabID())
 				showPrefabAttributes(collection[index]);
@@ -347,16 +311,16 @@ public class GOManagerWindow extends JDialog{
 	}
 	
 	public void refresh(){
-		if(goBase.prefabsBase.size()>0){
+		if(GOBase.prefabsBase.size()>0){
 		int selectedIndex = prefabsList.getSelectedIndex();
 		listModel.removeAllElements();
-		for(Prefab p : goBase.prefabsBase)
+		for(Prefab p : GOBase.prefabsBase)
 			listModel.addElement(p.getPrefabID());
 		if(selectedIndex<listModel.size())
 			prefabsList.setSelectedIndex(selectedIndex);
 		else
 			prefabsList.setSelectedIndex(listModel.size()-1);
-		showPrefabAttributes((goBase.prefabsBase.get(prefabsList.getSelectedValue().toString()).getPrefabID()));
+		showPrefabAttributes((GOBase.prefabsBase.get(prefabsList.getSelectedValue().toString()).getPrefabID()));
 		}
 	}
 	
@@ -364,8 +328,6 @@ public class GOManagerWindow extends JDialog{
 		
 		//original image of selected tile
 		private BufferedImage image;
-		
-		private BufferedImage resizedImage;
 		
 		public PreviewPanel(){
 			this.setBackground(Color.BLACK);

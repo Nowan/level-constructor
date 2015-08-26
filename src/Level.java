@@ -26,6 +26,14 @@ public class Level {
 		return gameObjects;
 	}
 	
+	public void setObjects(ArrayList<GameObject> gameObjects){
+		ConstructorWindow.instance.workspace.canvas.indexMap =new int [width][height];
+		int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
+
+		for(GameObject go : gameObjects)
+			this.gameObjects.add(go);
+	}
+	
 	public Dimension getSize(){
 		return new Dimension(width,height);
 	}

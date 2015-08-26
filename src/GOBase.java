@@ -34,7 +34,7 @@ public class GOBase{
 		
 		public Prefab get(String prefabID){
 			for(Prefab p : this){
-				if(p.getPrefabID()==prefabID)
+				if(p.getPrefabID().equals(prefabID))
 					return p;
 			}
 			return null;

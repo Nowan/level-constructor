@@ -3,14 +3,11 @@ import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,8 +18,6 @@ public class XMLConverter {
 	private static final String PREFAB_BASE_ADDRESS = "src/resourses/prefabsbase.xml";
 	
 	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "src/resourses/prefabcategorybase.xml";
-	
-	private GOBase goBase = ConstructorWindow.instance.globals.goBase;
 	
 	private File fXmlFile;
 	private DocumentBuilderFactory dbFactory;
@@ -91,7 +86,7 @@ public class XMLConverter {
 			Element rootElement = doc.createElement("prefabsbase");
 			doc.appendChild(rootElement);
 
-			for(Prefab P : goBase.prefabsBase){;
+			for(Prefab P : GOBase.prefabsBase){;
 				Element prefab = doc.createElement("prefab");
 				rootElement.appendChild(prefab);
 
@@ -184,7 +179,7 @@ public class XMLConverter {
 			Element rootElement = doc.createElement("prefabcategorybase");
 			doc.appendChild(rootElement);
 
-			for(PrefabCategory P : ConstructorWindow.instance.globals.goBase.prefabCategoryBase){
+			for(PrefabCategory P : GOBase.prefabCategoryBase){
 				Element prefabCategory = doc.createElement("prefabcategory");
 				rootElement.appendChild(prefabCategory);
 
@@ -214,5 +209,87 @@ public class XMLConverter {
 			return false;
 		}
 	}
+	
+	public boolean saveLevel(String fileAddress){
+		try {
+			Level level = ConstructorWindow.globals.level;
+			// root elements
+			Document doc = dBuilder.newDocument();
+			Element rootElement = doc.createElement("level");
+			rootElement.setAttribute("width", String.valueOf(level.getWidth()));
+			rootElement.setAttribute("height", String.valueOf(level.getHeight()));
+			rootElement.setAttribute("defaultwidth", String.valueOf(level.getDefaultWidth()));
+			rootElement.setAttribute("defaultheight", String.valueOf(level.getDefaultHeight()));
+			doc.appendChild(rootElement);
+			
+			Element objectsElement = doc.createElement("objects");
+			rootElement.appendChild(objectsElement);
+			
+			for(GameObject go : ConstructorWindow.globals.level.getObjects()){
+				Element gameObject = doc.createElement("gameobject");
+				objectsElement.appendChild(gameObject);
+				
+				gameObject.setAttribute("prefab", go.getPrefab().getPrefabID());
+				gameObject.setAttribute("posx", String.valueOf(go.getPosition().x));
+				gameObject.setAttribute("posy", String.valueOf(go.getPosition().y));
+				gameObject.setAttribute("width", String.valueOf(go.getTiledWidth()));
+				gameObject.setAttribute("height", String.valueOf(go.getTiledHeight()));
+			}
+			// write the content into xml file
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(new File(fileAddress));
 
+			transformer.transform(source, result);
+
+			return true;
+		} 
+		catch (Exception ex) {
+			ex.printStackTrace();
+			return false;
+		}
+	}
+
+	public Level loadLevel(String fileAddress){
+		try {
+			fXmlFile = new File(fileAddress);
+			doc = dBuilder.parse(fXmlFile);
+			doc.getDocumentElement().normalize();
+			
+			Element levelElement = (Element)doc.getElementsByTagName("level").item(0);
+			int defaultWidth = Integer.valueOf(levelElement.getAttribute("defaultwidth"));
+			int defaultHeight = Integer.valueOf(levelElement.getAttribute("defaultheight"));
+			int width = Integer.valueOf(levelElement.getAttribute("width"));
+			int height = Integer.valueOf(levelElement.getAttribute("height"));
+			
+			Level level=new Level(defaultWidth,defaultHeight);
+			level.setSize(width,height);
+			
+			ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
+			
+			Element objectsElement = (Element)levelElement.getElementsByTagName("objects").item(0);
+			NodeList nList = objectsElement.getElementsByTagName("gameobject");
+			for (int temp = 0; temp < nList.getLength(); temp++) {
+				Node nNode = nList.item(temp);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElement = (Element) nNode;
+					
+					System.out.println(GOBase.prefabsBase.get(eElement.getAttribute("prefab")).getTiledWidth());
+					//System.out.println(eElement.getAttribute("prefab"));
+					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("prefab"));
+					int posX = Integer.valueOf(eElement.getAttribute("posx"));
+					int posY = Integer.valueOf(eElement.getAttribute("posy"));
+					
+					gameObjects.add(new GameObject(prefab,posX,posY));
+				}
+			}
+			level.setObjects(gameObjects);
+			return level;
+		    } catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		    }
+		
+	}
 }

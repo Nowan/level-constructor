@@ -11,6 +11,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 
@@ -173,13 +174,42 @@ public class ConstructorMenuBar extends JMenuBar{
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 	          File selectedFile = fileChooser.getSelectedFile();
 	          String fileAddress = selectedFile.getAbsolutePath();
+	          
+	          new JOptionPane();
+	          if (selectedFile.exists()){
+					int n = JOptionPane.showConfirmDialog(
+	      			  	ConstructorWindow.instance,
+	      			    "File already exists. Do you really want to override it?",
+	      			    "Message",
+	      			    JOptionPane.YES_NO_OPTION);
+	        	  	if(n!=0)
+	        	  		return;
+		      }
+	          
+	          boolean operationSuccess = Globals.xmlConverter.saveLevel(fileAddress);
+	          if(operationSuccess)
+	        	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "File successfully saved");
+	          else
+	        	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "Couldn't save the file","Error", JOptionPane.ERROR_MESSAGE);
+	        	  
 	    }
-		
-		
 	}
 	
 	private void onLoadLevel_Click(){
-		//ConstructorWindow.instance.dispose();
+		int returnValue = fileChooser.showOpenDialog(ConstructorWindow.instance);
+		if (returnValue == JFileChooser.APPROVE_OPTION) {
+	        File selectedFile = fileChooser.getSelectedFile();
+	        String fileAddress = selectedFile.getAbsolutePath();
+	          
+	        Level level = Globals.xmlConverter.loadLevel(fileAddress);
+	        if(level==null){
+	        	JOptionPane.showMessageDialog(ConstructorWindow.instance, "File couldn't be opened","Error", JOptionPane.ERROR_MESSAGE);  
+	        	  return;
+	        }
+	        ConstructorWindow.instance.workspace.setLevel(level);
+	  		showGrid.setSelected(true);
+	  		showObjectsBorder.setSelected(true);
+		}
 	}
 	
 	private void onRunLevel_Click(){

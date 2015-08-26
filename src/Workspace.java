@@ -4,23 +4,13 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 
 public class Workspace extends JPanel{
@@ -50,7 +40,7 @@ public class Workspace extends JPanel{
 	public void showTileIndex(boolean flag){ this.showTileIndex=flag; canvas.repaint(); }
 	
 	public void setLevel(Level level){
-		ConstructorWindow.instance.globals.level = level;
+		ConstructorWindow.globals.level = level;
 		canvas.generateLevel();
 	}
 
@@ -91,14 +81,19 @@ public class Workspace extends JPanel{
 		}
 		
 		public void generateLevel(){
-			level = ConstructorWindow.instance.globals.level;
+			level = ConstructorWindow.globals.level;
 			//Counting the scale factor to make sure that tiles are using all available vertical space 
 			double sf = (ConstructorWindow.instance.workspace.getSize().getHeight())/(level.getHeight()*TILE_SIZE);
 			setScaleFactor(sf);
 			setLevelSize(level.getWidth(),level.getHeight());
+			updateLevelImage();
 			for(int c=0;c<level.getWidth();c++)
 				for(int l=0; l<level.getHeight();l++)
 					indexMap[c][l]=-1;
+			for(int i=0;i<level.getObjects().size();i++)
+			for(int c=0;c<level.getObjects().get(i).getTiledWidth();c++)
+				for(int l=0; l<level.getObjects().get(i).getTiledHeight();l++)
+					indexMap[level.getObjects().get(i).getPosition().x+c][level.getObjects().get(i).getPosition().y+l]=i;
 			setEnabled(true);
 		}
 		
@@ -365,8 +360,9 @@ public class Workspace extends JPanel{
 		@Override public void mouseEntered(MouseEvent arg0) {
 			if(!isEnabled()) return;
 			activeTile=new Point(getTilePositionAt(arg0.getX(),arg0.getY()));
-			if(indexMap[activeTile.x][activeTile.y]!=-1)
-				ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab());
+			int index = indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)];
+			if(index!=-1)
+				ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(level.getObjects().get(index).getPrefab());
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
 			repaint();

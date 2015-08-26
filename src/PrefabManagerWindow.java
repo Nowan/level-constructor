@@ -34,7 +34,6 @@ public class PrefabManagerWindow  extends JDialog{
 	
 	private PrefabManagerWindow mainLink = this;
 	
-	private GOBase goBase = Globals.goBase;
 	private XMLConverter xmlConverter = Globals.xmlConverter;
 	private Font DEFAULT_FONT = Globals.DEFAULT_FONT;
 	private Font INDEX_FONT = Globals.INDEX_FONT;
@@ -90,8 +89,8 @@ public class PrefabManagerWindow  extends JDialog{
 		
 		add(generateNewPrefabContent());
 		
-		for(int i=0; i<goBase.prefabCategoryBase.size();i++)
-			if(goBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
+		for(int i=0; i<GOBase.prefabCategoryBase.size();i++)
+			if(GOBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
 				categoryJCB.setSelectedIndex(i);
 			}
 		indexJTF.setText(editPrefab.getPrefabID());
@@ -134,7 +133,7 @@ public class PrefabManagerWindow  extends JDialog{
 		categoryJL.setHorizontalAlignment(JLabel.RIGHT);
 		categoryJL.setFont(PARAMETER_FONT);
 		
-		categoryJCB = new JComboBox(goBase.prefabCategoryBase.getNameCollection());
+		categoryJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
 		categoryJCB.setSelectedIndex(0);
 		categoryJCB.setFont(DEFAULT_FONT);
 		categoryJCB.setPreferredSize(new Dimension(170,22));
@@ -194,7 +193,7 @@ public class PrefabManagerWindow  extends JDialog{
 		browseLocationJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				int returnValue = fileChooser.showSaveDialog(ConstructorWindow.instance);
+				int returnValue = fileChooser.showOpenDialog(ConstructorWindow.instance);
 				if (returnValue == JFileChooser.APPROVE_OPTION) {
 			          File selectedFile = fileChooser.getSelectedFile();
 			          String fileAddress = selectedFile.getAbsolutePath();
@@ -331,7 +330,7 @@ public class PrefabManagerWindow  extends JDialog{
 	private void setAdditiveAttributes(String categoryName){
 		additiveAttributesPanel.removeAll();
 		
-		PrefabCategory selectedCategory = goBase.prefabCategoryBase.get(categoryName);
+		PrefabCategory selectedCategory = GOBase.prefabCategoryBase.get(categoryName);
 		ArrayList<AdditiveAttribute> attributes = selectedCategory.getAdditiveAttributes();
 		
 		if(!attributes.isEmpty())
@@ -434,9 +433,9 @@ public class PrefabManagerWindow  extends JDialog{
 	}
 	
 	private void rebuildPrefabIndex(){
-		String categoryIndex=goBase.prefabCategoryBase.get(categoryJCB.getSelectedItem().toString()).getID();
+		String categoryIndex=GOBase.prefabCategoryBase.get(categoryJCB.getSelectedItem().toString()).getID();
 		int lastIndex = 0;
-		for(Prefab p : goBase.prefabsBase)
+		for(Prefab p : GOBase.prefabsBase)
 			if(p.getCategoryID().equals(categoryIndex)){
 				int ind = Integer.valueOf(p.getPrefabID().substring(p.getPrefabID().length()-2));
 				if(ind>lastIndex)
@@ -455,7 +454,7 @@ public class PrefabManagerWindow  extends JDialog{
 			String textureAddress = textureJTF.getText();
 			String description = descriptionJTA.getText();
 			
-			PrefabCategory category = goBase.prefabCategoryBase.get(categoryName);
+			PrefabCategory category = GOBase.prefabCategoryBase.get(categoryName);
 			ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
 			for(int i=0;i<category.getAdditiveAttributes().size();i++){
 				additiveAttributes.add(category.getAdditiveAttributes().get(i));
@@ -482,11 +481,11 @@ public class PrefabManagerWindow  extends JDialog{
 			}
 			//if there is no prefab to edit, add new Prefab to the base
 			if(editPrefab==null)
-				goBase.prefabsBase.add(new Prefab(id,goBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
+				GOBase.prefabsBase.add(new Prefab(id,GOBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
 			//else - save the parameters to editPrefab
 			else{
 				editPrefab.setPrefabID(id);
-				editPrefab.setCategory(goBase.prefabCategoryBase.get(categoryName).getID());
+				editPrefab.setCategory(GOBase.prefabCategoryBase.get(categoryName).getID());
 				editPrefab.setTiledWidth(tw);
 				editPrefab.setTiledHeight(th);
 				editPrefab.setTextureAddress(textureAddress2);
@@ -497,7 +496,7 @@ public class PrefabManagerWindow  extends JDialog{
 			xmlConverter.savePrefabBase();
 			
 			//refresh Game Object Manager Window
-			ConstructorWindow.instance.goManager.refresh();
+			ConstructorWindow.goManager.refresh();
 			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			mainLink.dispose();
 		}
