@@ -498,6 +498,7 @@ public class PrefabManagerWindow  extends JDialog{
 			
 			//refresh Game Object Manager Window
 			ConstructorWindow.instance.goManager.refresh();
+			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			mainLink.dispose();
 		}
 		catch(Exception ex){

@@ -8,9 +8,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -19,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -36,9 +32,7 @@ public class CategoryManagerWindow extends JDialog{
 	
 	private final Font DEFAULT_FONT = new Font("Verdana", Font.PLAIN,11);
 	private final Font PARAMETER_FONT = new Font("Calibri", Font.PLAIN,13);
-	
-	private GOBase goBase = ConstructorWindow.instance.globals.goBase;
-	
+
 	private PrefabCategory currentlySelectedCategory;
 	
 	//contains category data for editing
@@ -70,7 +64,7 @@ public class CategoryManagerWindow extends JDialog{
 		switch(type){
 		case PREFAB_TYPE:
 			add(generatePrefabContent());
-			if(goBase.prefabCategoryBase.size()!=0)
+			if(GOBase.prefabCategoryBase.size()!=0)
 				showCategoryInfo(currentlySelectedCategory);
 			break;
 		case PARTICLE_TYPE:
@@ -89,12 +83,12 @@ public class CategoryManagerWindow extends JDialog{
 		panel.setLayout(slayout);
 		
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
-		for(PrefabCategory p : goBase.prefabCategoryBase)
+		for(PrefabCategory p : GOBase.prefabCategoryBase)
 			listModel.addElement(p.getName());
 		categoryList = new JList<String>(listModel);
 		if(listModel.size()!=0){
 		categoryList.setSelectedIndex(0);
-		currentlySelectedCategory = goBase.prefabCategoryBase.get(0);
+		currentlySelectedCategory = GOBase.prefabCategoryBase.get(0);
 		}
 		categoryList.setPreferredSize(new Dimension(165,this.getHeight()-50));
 		categoryList.setFont(DEFAULT_FONT);
@@ -111,7 +105,7 @@ public class CategoryManagerWindow extends JDialog{
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				currentlySelectedCategory = goBase.prefabCategoryBase.get(categoryList.getSelectedValue());
+				currentlySelectedCategory = GOBase.prefabCategoryBase.get(categoryList.getSelectedValue());
 				showCategoryInfo(currentlySelectedCategory);
 			}
 
@@ -123,7 +117,7 @@ public class CategoryManagerWindow extends JDialog{
 		removeJB.setContentAreaFilled(false);
 		removeJB.setFont(DEFAULT_FONT);
 		removeJB.setPreferredSize(new Dimension(50,22));
-		if(goBase.prefabCategoryBase.size()==0)
+		if(GOBase.prefabCategoryBase.size()==0)
 			removeJB.setEnabled(false);
 		removeJB.addActionListener(new ActionListener(){
 			@Override
@@ -146,16 +140,16 @@ public class CategoryManagerWindow extends JDialog{
 					if(n==0){
 					//number of prefabs of the deleted category
 					int pcn=0;
-					for(int i=0;i<goBase.prefabsBase.size();i++)
-						if(goBase.prefabsBase.get(i).getCategoryID().contains(currentlySelectedCategory.getID())){
-							goBase.prefabsBase.remove(i);
+					for(int i=0;i<GOBase.prefabsBase.size();i++)
+						if(GOBase.prefabsBase.get(i).getCategoryID().contains(currentlySelectedCategory.getID())){
+							GOBase.prefabsBase.remove(i);
 							pcn++;
 						}
 					//if any prefabs were deleted - save changes to prefabsbase.xml & refresh goManager
 					if(pcn>0){
 						System.out.println(pcn);
-						ConstructorWindow.instance.globals.xmlConverter.savePrefabBase();
-						ConstructorWindow.instance.goManager.refresh();
+						Globals.xmlConverter.savePrefabBase();
+						ConstructorWindow.goManager.refresh();
 						}
 					//if category list will become empty after deleting this object, disable remove btn and select nothing
 					if(listModel.size()==1){
@@ -163,26 +157,27 @@ public class CategoryManagerWindow extends JDialog{
 							removeJB.setEnabled(false);
 							attributesJSP.setVisible(false);
 							listModel.remove(categoryList.getSelectedIndex());
-							goBase.prefabCategoryBase.remove(currentlySelectedCategory);
+							GOBase.prefabCategoryBase.remove(currentlySelectedCategory);
 						}
 					else{
 					//making decision, which category select next after deleting current
 					if(categoryList.getSelectedIndex()!=0){
-						goBase.prefabCategoryBase.remove(currentlySelectedCategory);
+						GOBase.prefabCategoryBase.remove(currentlySelectedCategory);
 						categoryList.setSelectedIndex(categoryList.getSelectedIndex()-1);
 						listModel.remove(categoryList.getSelectedIndex()+1);
 					}
 					else{
-						goBase.prefabCategoryBase.remove(currentlySelectedCategory);
+						GOBase.prefabCategoryBase.remove(currentlySelectedCategory);
 						categoryList.setSelectedIndex(categoryList.getSelectedIndex()+1);
 						listModel.remove(categoryList.getSelectedIndex()-1);
 					}
-					currentlySelectedCategory=goBase.prefabCategoryBase.get(categoryList.getSelectedValue());
+					currentlySelectedCategory=GOBase.prefabCategoryBase.get(categoryList.getSelectedValue());
 					showCategoryInfo(currentlySelectedCategory);
 					}
 					
 					//saving changes to prefabcategorybase.xml
-					ConstructorWindow.instance.globals.xmlConverter.savePrefabCategoryBase();
+					Globals.xmlConverter.savePrefabCategoryBase();
+					ConstructorWindow.instance.collectionsPanel.tilesTab.refreshCategoryList();
 					}
 				}
 				
@@ -193,7 +188,7 @@ public class CategoryManagerWindow extends JDialog{
 		editJB.setContentAreaFilled(false);
 		editJB.setFont(DEFAULT_FONT);
 		editJB.setPreferredSize(new Dimension(65,22));
-		if(goBase.prefabCategoryBase.size()==0)
+		if(GOBase.prefabCategoryBase.size()==0)
 			editJB.setEnabled(false);
 		editJB.addActionListener(new ActionListener(){
 			@Override
@@ -227,10 +222,10 @@ public class CategoryManagerWindow extends JDialog{
 					setEditMode(false);
 					
 					//saving changes to prefabcategorybase.xml
-					ConstructorWindow.instance.globals.xmlConverter.savePrefabCategoryBase();
+					Globals.xmlConverter.savePrefabCategoryBase();
 					
 					listModel.removeAllElements();
-					for(PrefabCategory p : goBase.prefabCategoryBase)
+					for(PrefabCategory p : GOBase.prefabCategoryBase)
 						listModel.addElement(p.getName());
 				}
 				//usual action - add new object to the categoryList
@@ -241,7 +236,7 @@ public class CategoryManagerWindow extends JDialog{
 						if(listModel.getElementAt(i).toString().contains("new_category"))
 							c++;
 					PrefabCategory category = new PrefabCategory("nc"+c,"new_category_"+c,false,null);
-					goBase.prefabCategoryBase.add(category);
+					GOBase.prefabCategoryBase.add(category);
 					listModel.addElement(category.getName());
 					categoryList.setSelectedIndex(listModel.getSize()-1);
 					currentlySelectedCategory=category;
@@ -255,8 +250,9 @@ public class CategoryManagerWindow extends JDialog{
 						attributesJSP.setVisible(true);
 					
 					//saving changes to prefabcategorybase.xml
-					ConstructorWindow.instance.globals.xmlConverter.savePrefabCategoryBase();
+					Globals.xmlConverter.savePrefabCategoryBase();
 				}
+				ConstructorWindow.instance.collectionsPanel.tilesTab.refreshCategoryList();
 			}
 		});
 		
@@ -267,7 +263,7 @@ public class CategoryManagerWindow extends JDialog{
 		attributesJSP = new JScrollPane(attributesJP);
 		attributesJSP.setBorder(BorderFactory.createTitledBorder("Attributes"));
 		attributesJSP.setPreferredSize(new Dimension(this.getWidth()-categoryList.getPreferredSize().width - 10,this.getHeight()-30));
-		if(goBase.prefabCategoryBase.size()==0)
+		if(GOBase.prefabCategoryBase.size()==0)
 			attributesJSP.setVisible(false);
 		
 		//generating attributes panel components

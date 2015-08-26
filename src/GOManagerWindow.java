@@ -330,8 +330,9 @@ public class GOManagerWindow extends JDialog{
 				Files.delete(Paths.get("bin/"+currentlyShowedPrefab.getTextureAddress()));
 			}
 			catch(IOException ex){
-				System.out.println(ex.getStackTrace()+"!!!");
+				System.out.println(ex.getStackTrace());
 			}
+			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			refresh();
 		}
 	}

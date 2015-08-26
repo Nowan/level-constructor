@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -29,7 +30,8 @@ public class TilesTab extends JPanel{
 	
 	//filters for prefabsPane
 	private JComboBox<String> selectCategoryJCB;
-
+	private DefaultListModel<String> listModel;
+	
 	//panel, which displays parameters of selected prefab
 	private InspectorPanel inspectorPanel;
 	
@@ -45,6 +47,9 @@ public class TilesTab extends JPanel{
 		
 		//adding filters for prefabsPane to the content panel
 		JPanel FilterPane = new JPanel(new GridLayout(1,2));
+		listModel = new DefaultListModel<String>();
+		for(PrefabCategory p : GOBase.prefabCategoryBase)
+			listModel.addElement(p.getName());
 		selectCategoryJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
 		selectCategoryJCB.setPreferredSize(new Dimension(150,25));
 		selectCategoryJCB.setFont(Globals.DEFAULT_FONT);
@@ -81,6 +86,18 @@ public class TilesTab extends JPanel{
 		previewPanel = new PreviewPanel();
 		previewPanel.setPreferredSize(new Dimension(300,350));
 		add(previewPanel);
+	}
+	
+	public void refreshPrefabPanel(){
+		selectCategoryJCB.setSelectedIndex(selectCategoryJCB.getSelectedIndex());
+	}
+	
+	public void refreshCategoryList(){
+		listModel.clear();
+		for(PrefabCategory p : GOBase.prefabCategoryBase)
+			listModel.addElement(p.getName());
+		if(selectCategoryJCB.getSelectedIndex()>=listModel.size())
+			selectCategoryJCB.setSelectedIndex(0);
 	}
 
 	//invokes when value in one of the filter checkboxes changed

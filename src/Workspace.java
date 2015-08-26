@@ -365,6 +365,8 @@ public class Workspace extends JPanel{
 		@Override public void mouseEntered(MouseEvent arg0) {
 			if(!isEnabled()) return;
 			activeTile=new Point(getTilePositionAt(arg0.getX(),arg0.getY()));
+			if(indexMap[activeTile.x][activeTile.y]!=-1)
+				ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab());
 			if(Globals.toolBox.insertionTool.isActive())
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
 			repaint();
@@ -374,6 +376,7 @@ public class Workspace extends JPanel{
 			if(!isEnabled()) return;
 			activeTile = null;
 			resizedTile = null;
+			ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(null);
 			repaint();
 		}
 
@@ -446,9 +449,10 @@ public class Workspace extends JPanel{
 			Point tile = getTilePositionAt(e.getX(),e.getY());
 			if(tile.getX()!=activeTile.getX()||tile.getY()!=activeTile.getY()){
 				activeTile.setLocation(tile);
+				int index = indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)];
 				//if tile is not empty
-				if(indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)]!=-1){
-					Prefab prefab = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab();
+				if(index!=-1){
+					Prefab prefab = level.getObjects().get(index).getPrefab();
 					ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
 				}
 				else{
