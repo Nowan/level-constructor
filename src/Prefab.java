@@ -1,4 +1,5 @@
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -38,15 +39,25 @@ public class Prefab {
 		public String getTextureAddress() {
 			return textureAddress;
 		}
+		
+		public String getTextureName() {
+			return textureAddress.substring(textureAddress.lastIndexOf('/')+1);
+		}
+		
+		public void setTextureName(String textureName) {
+			setTextureAddress(Globals.TEXTURES_FOLDER+getCategory().getName()+"/"+textureName);
+		}
+		
 		public void setTextureAddress(String textureAddress) {
 			this.textureAddress = textureAddress;
 			try{
-				this.setTexture(ImageIO.read(getClass().getResource(textureAddress)));
+				this.setTexture(ImageIO.read(new File(textureAddress)));
 			}
 			catch(IOException ex){
 				System.out.println(ex.getMessage());
 			}
 		}
+		
 		public BufferedImage getTexture() {
 			return texture;
 		}

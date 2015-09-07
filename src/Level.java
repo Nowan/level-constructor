@@ -5,6 +5,8 @@ import java.util.Comparator;
 
 public class Level {
 
+	private String fileAddress;
+	
 	private GameObjects gameObjects;
 	
 	private int width;
@@ -62,8 +64,18 @@ public class Level {
 		return height;
 	}
 	
+	public String getFileAddress(){
+		return fileAddress;
+	}
+	
+	public void setFileAddress(String fileAddress){
+		this.fileAddress = fileAddress;
+	}
+	
 	public class GameObjects extends ArrayList<GameObject>{
-		
+
+		private static final long serialVersionUID = -724843783326240571L;
+
 		public GameObjects(){
 			super();
 		}
@@ -96,8 +108,8 @@ public class Level {
 			GameObject returnObject = super.remove(index);
 			//setting object indexes in canvas.indexMap
 			int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
-			int levelWidth = ConstructorWindow.instance.globals.level.getWidth();
-			int levelHeight = ConstructorWindow.instance.globals.level.getHeight();
+			int levelWidth = ConstructorWindow.globals.level.getWidth();
+			int levelHeight = ConstructorWindow.globals.level.getHeight();
 			//clearing indexMap
 			for(int c=0;c<levelWidth;c++)
 				for(int l=0;l<levelHeight;l++)
@@ -118,8 +130,8 @@ public class Level {
 			boolean returnObject = super.remove(o);
 			//setting object indexes in canvas.indexMap
 			int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
-			int levelWidth = ConstructorWindow.instance.globals.level.getWidth();
-			int levelHeight = ConstructorWindow.instance.globals.level.getHeight();
+			int levelWidth = ConstructorWindow.globals.level.getWidth();
+			int levelHeight = ConstructorWindow.globals.level.getHeight();
 			//clearing indexMap
 			for(int c=0;c<levelWidth;c++)
 				for(int l=0;l<levelHeight;l++)
@@ -130,7 +142,7 @@ public class Level {
 				int objectHeight=get(i).getTiledHeight();
 				for(int c=0;c<objectWidth;c++)
 					for(int l=0;l<objectHeight;l++)
-						if(get(i).getPosition().x+c<ConstructorWindow.instance.globals.level.getWidth()&&get(i).getPosition().y+l<ConstructorWindow.instance.globals.level.getHeight())
+						if(get(i).getPosition().x+c<ConstructorWindow.globals.level.getWidth()&&get(i).getPosition().y+l<ConstructorWindow.globals.level.getHeight())
 						indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
 			}
 			return returnObject;

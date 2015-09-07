@@ -35,6 +35,8 @@ import javax.swing.SpringLayout;
 
 public class GOManagerWindow extends JDialog{
 	
+	private static final long serialVersionUID = 7508522724431290929L;
+
 	private XMLConverter xmlConverter = Globals.xmlConverter;
 	
 	//if true, all the textboxes are editable, Cancel and Save button appears, Edit button is hided
@@ -201,7 +203,7 @@ public class GOManagerWindow extends JDialog{
 				new PrefabManagerWindow();
 			}
 		});
-		
+
 		JMenuItem particleJMI = new JMenuItem("Particle");
 		particleJMI.setFont(Globals.DEFAULT_FONT);
 		
@@ -220,6 +222,15 @@ public class GOManagerWindow extends JDialog{
 			}
 		});
 		
+		JMenuItem assetManagerJMI = new JMenuItem("Assets");
+		assetManagerJMI.setFont(Globals.DEFAULT_FONT);
+		assetManagerJMI.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				new AssetManagerWindow();
+			}
+		});
+		
 		JSeparator separator = new JSeparator();
 		JLabel showCategoryJL = new JLabel("Show category: ");
 		showCategoryJL.setFont(Globals.DEFAULT_FONT);
@@ -231,6 +242,7 @@ public class GOManagerWindow extends JDialog{
 		newJM.add(backgroundJMI);
 		menu.add(newJM);
 		manageJM.add(categoryManagerJMI);
+		manageJM.add(assetManagerJMI);
 		menu.add(manageJM);
 		menu.add(separator);
 		menu.add(showCategoryJL);
@@ -289,13 +301,6 @@ public class GOManagerWindow extends JDialog{
 		if(n==0){
 			GOBase.prefabsBase.remove(currentlyShowedPrefab);
 			xmlConverter.savePrefabBase();
-			try{
-				Files.delete(Paths.get("src/"+currentlyShowedPrefab.getTextureAddress()));
-				Files.delete(Paths.get("bin/"+currentlyShowedPrefab.getTextureAddress()));
-			}
-			catch(IOException ex){
-				System.out.println(ex.getStackTrace());
-			}
 			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			refresh();
 		}
@@ -324,61 +329,4 @@ public class GOManagerWindow extends JDialog{
 		}
 	}
 	
-	private class PreviewPanel extends JPanel{
-		
-		//original image of selected tile
-		private BufferedImage image;
-		
-		public PreviewPanel(){
-			this.setBackground(Color.BLACK);
-			//at start, preview panel is empty
-			this.hideImage();
-		}
-		
-		//set image to preview
-		public void setImage(BufferedImage image){
-			this.image=resizeImage(image);
-			repaint();
-		}
-		
-		private BufferedImage resizeImage(BufferedImage originalImage){
-			int type = originalImage.getType() == 0? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
-			BufferedImage resizedImage = new BufferedImage(this.getPreferredSize().width, this.getPreferredSize().height, type);
-			Graphics2D g = resizedImage.createGraphics();
-			
-			float scaleFactor = (float)((this.getPreferredSize().width+ this.getPreferredSize().height)/2)/Math.max(originalImage.getWidth(), originalImage.getHeight());
-			int resizedWidth = (int)(originalImage.getWidth()*scaleFactor);
-			int resizedHeight = (int)(originalImage.getHeight()*scaleFactor);
-			int posX = this.getPreferredSize().width/2 - resizedWidth/2;
-			int posY = this.getPreferredSize().height/2 - resizedHeight/2;
-			
-			g.drawImage(originalImage, posX, posY, resizedWidth, resizedHeight, null);
-			g.dispose();
-		 
-			return resizedImage;
-		}
-		
-		//hide image from preview
-		public void hideImage(){
-			image = null;
-			repaint();
-		}
-		
-		@Override
-		public void paint(Graphics g)
-		{
-			super.paint(g);
-			//if no image is attached, do nothing
-			if(image==null) return;
-			
-			//elsewise draw image
-			g.drawImage(image,0,0,null);
-		} 
-		
-		@Override
-		public void setEnabled(boolean arg0){
-			for(int i=0;i<getComponentCount();i++)
-				getComponent(i).setEnabled(arg0);
-		}
-	}
 }

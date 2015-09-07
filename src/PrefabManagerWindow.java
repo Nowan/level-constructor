@@ -1,9 +1,12 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,60 +33,52 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class PrefabManagerWindow  extends JDialog{
 	
+	private static final long serialVersionUID = 836695465983611801L;
+
 	private PrefabManagerWindow mainLink = this;
 	
 	private XMLConverter xmlConverter = Globals.xmlConverter;
-	private Font DEFAULT_FONT = Globals.DEFAULT_FONT;
-	private Font INDEX_FONT = Globals.INDEX_FONT;
-	private Font PARAMETER_FONT = Globals.PARAMETER_FONT;
+	
+	private String assetName;
 	
 	private JTextField indexJTF;
 	private JComboBox<String> categoryJCB;
 	private JFormattedTextField tiledWidthJTF;
 	private JFormattedTextField tiledHeightJTF;
-	private JTextField textureJTF;
+	private PreviewPanel assetPP;
 	private JScrollPane descriptionJSP;
 	private JTextArea descriptionJTA;
-	private JButton browseLocationJB;
 	private JPanel additiveAttributesPanel;
+
 	
 	//if null, manager adds new Prefab to the base 
 	//if not null, manager saves all changes to this object
 	private Prefab editPrefab;
 	
-	private JFileChooser fileChooser;
-	
 	public PrefabManagerWindow(){
 		super(ConstructorWindow.instance, "Prefab manager");
 		editPrefab=null;
 		this.setModal(true);
-		setSize(303,490);
+		setSize(303,570);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setLayout(new BorderLayout());
 		setResizable(false);
 		
-		fileChooser=new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
-		fileChooser.setFileFilter(filter);
-		
 		add(generateNewPrefabContent());
+		indexJTF.setText(generatePrefabIndex());
 		setVisible(true);
 	}
 	
 	public PrefabManagerWindow(Prefab P){
 		super(ConstructorWindow.instance, "Prefab manager");
 		editPrefab=P;
-		this.setModal(true);
-		setSize(303,490);
+		setModal(true);
+		setSize(303,570);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setLayout(new BorderLayout());
 		setResizable(false);
-		
-		fileChooser=new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
-		fileChooser.setFileFilter(filter);
 		
 		add(generateNewPrefabContent());
 		
@@ -91,11 +86,12 @@ public class PrefabManagerWindow  extends JDialog{
 			if(GOBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
 				categoryJCB.setSelectedIndex(i);
 			}
-		indexJTF.setText(editPrefab.getPrefabID());
 		categoryJCB.setEnabled(false);
+		indexJTF.setText(editPrefab.getPrefabID());
 		tiledWidthJTF.setText(String.valueOf(editPrefab.getTiledWidth()));
 		tiledHeightJTF.setText(String.valueOf(editPrefab.getTiledHeight()));
-		textureJTF.setText(editPrefab.getTextureAddress());
+		assetPP.setImage(editPrefab.getTexture());
+		assetName = editPrefab.getTextureName();
 		descriptionJTA.setText(editPrefab.getDesctiption());
 		setAdditiveAttributes(P.getCategory().getName());
 		for(int i=0;i<editPrefab.getCategory().getAdditiveAttributes().size();i++){
@@ -109,7 +105,6 @@ public class PrefabManagerWindow  extends JDialog{
 				break;
 			}
 		}
-		
 		setVisible(true);
 	}
 	
@@ -121,7 +116,7 @@ public class PrefabManagerWindow  extends JDialog{
 		
 		//components, displayed when only one item is selected 
 		indexJTF = new JTextField("Index");
-		indexJTF.setFont(INDEX_FONT);
+		indexJTF.setFont(Globals.INDEX_FONT);
 		indexJTF.setPreferredSize(new Dimension(prefabParametersJP.getPreferredSize().width,70));
 		indexJTF.setHorizontalAlignment(JTextField.CENTER);
 		indexJTF.setEnabled(false);
@@ -129,11 +124,11 @@ public class PrefabManagerWindow  extends JDialog{
 		JLabel categoryJL = new JLabel("Category: ");
 		categoryJL.setPreferredSize(new Dimension(100,25));
 		categoryJL.setHorizontalAlignment(JLabel.RIGHT);
-		categoryJL.setFont(PARAMETER_FONT);
+		categoryJL.setFont(Globals.PARAMETER_FONT);
 		
 		categoryJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
 		categoryJCB.setSelectedIndex(0);
-		categoryJCB.setFont(DEFAULT_FONT);
+		categoryJCB.setFont(Globals.DEFAULT_FONT);
 		categoryJCB.setPreferredSize(new Dimension(170,22));
 		categoryJCB.addActionListener(new ActionListener(){
 			@Override
@@ -141,14 +136,16 @@ public class PrefabManagerWindow  extends JDialog{
 				setAdditiveAttributes(categoryJCB.getSelectedItem().toString());
 				additiveAttributesPanel.revalidate();
 				additiveAttributesPanel.repaint();
-				rebuildPrefabIndex();
+				indexJTF.setText(generatePrefabIndex());
+				assetPP.hideImage();
+				assetName = null;
 			}
 		});
 		
 		JButton manageCategoriesJB = new JButton("Manage categories");
 		manageCategoriesJB.setPreferredSize(new Dimension(250, 23));
 		manageCategoriesJB.setContentAreaFilled(false);
-		manageCategoriesJB.setFont(DEFAULT_FONT);
+		manageCategoriesJB.setFont(Globals.DEFAULT_FONT);
 		manageCategoriesJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -160,50 +157,56 @@ public class PrefabManagerWindow  extends JDialog{
 		JLabel tiledSizeJL = new JLabel("Tiled size: ");
 		tiledSizeJL.setPreferredSize(new Dimension(100,25));
 		tiledSizeJL.setHorizontalAlignment(JLabel.RIGHT);
-		tiledSizeJL.setFont(PARAMETER_FONT);
+		tiledSizeJL.setFont(Globals.PARAMETER_FONT);
 
 		tiledWidthJTF = new JFormattedTextField(new Integer(1));
 		tiledWidthJTF.setPreferredSize(new Dimension(70,22));
 		tiledWidthJTF.setHorizontalAlignment(JTextField.CENTER);
-		tiledWidthJTF.setFont(DEFAULT_FONT);
+		tiledWidthJTF.setFont(Globals.DEFAULT_FONT);
 		
 		JLabel xJL = new JLabel("x");
-		xJL.setFont(PARAMETER_FONT);
+		xJL.setFont(Globals.PARAMETER_FONT);
 		
 		tiledHeightJTF = new JFormattedTextField(new Integer(1));
 		tiledHeightJTF.setPreferredSize(new Dimension(70,22));
 		tiledHeightJTF.setHorizontalAlignment(JTextField.CENTER);
-		tiledHeightJTF.setFont(DEFAULT_FONT);
+		tiledHeightJTF.setFont(Globals.DEFAULT_FONT);
 		
 		JLabel textureJL = new JLabel("Texture: ");
 		textureJL.setPreferredSize(new Dimension(100,25));
 		textureJL.setHorizontalAlignment(JLabel.RIGHT);
-		textureJL.setFont(PARAMETER_FONT);
+		textureJL.setFont(Globals.PARAMETER_FONT);
 		
-		textureJTF = new JTextField();
-		textureJTF.setPreferredSize(new Dimension(135,22));
-		textureJTF.setFont(DEFAULT_FONT);
-		textureJTF.setEditable(false);
-		
-		browseLocationJB = new JButton("...");
-		browseLocationJB.setPreferredSize(new Dimension(35,22));
-		browseLocationJB.setFont(DEFAULT_FONT);
-		browseLocationJB.addActionListener(new ActionListener(){
+		assetPP = new PreviewPanel();
+		assetPP.setPreferredSize(new Dimension(170,100));
+		assetPP.setFont(Globals.DEFAULT_FONT);
+		assetPP.addMouseListener(new MouseListener(){
+
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				int returnValue = fileChooser.showOpenDialog(ConstructorWindow.instance);
-				if (returnValue == JFileChooser.APPROVE_OPTION) {
-			          File selectedFile = fileChooser.getSelectedFile();
-			          String fileAddress = selectedFile.getAbsolutePath();
-			          textureJTF.setText(fileAddress);
-			    }
+			public void mouseClicked(MouseEvent e) {
+				// get selected texture from AssetManager
+				AssetManagerWindow assetManagerWindow = new AssetManagerWindow(categoryJCB.getSelectedItem().toString());
+				assetName = assetManagerWindow.showDialog();
+				if(assetName!=null){
+					String textureAddress = Globals.TEXTURES_FOLDER+categoryJCB.getSelectedItem().toString()+"/"+assetName;
+					assetPP.setImage(textureAddress);
+				}
 			}
+
+			@Override public void mouseEntered(MouseEvent e) { assetPP.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY,4));}
+
+			@Override public void mouseExited(MouseEvent e) { assetPP.setBorder(BorderFactory.createEmptyBorder()); }
+
+			@Override public void mousePressed(MouseEvent e) {}
+
+			@Override public void mouseReleased(MouseEvent e) {}
+			
 		});
 		
 		JLabel descriptionJL = new JLabel("Description:" );
 		descriptionJL.setPreferredSize(new Dimension(100,25));
 		descriptionJL.setHorizontalAlignment(JLabel.RIGHT);
-		descriptionJL.setFont(PARAMETER_FONT);
+		descriptionJL.setFont(Globals.PARAMETER_FONT);
 		
 		descriptionJTA = new JTextArea();
 		descriptionJTA.setMargin(new Insets(5,5,5,5));
@@ -215,7 +218,7 @@ public class PrefabManagerWindow  extends JDialog{
 		JButton createJB = new JButton("Confirm");
 		createJB.setPreferredSize(new Dimension(prefabParametersJP.getPreferredSize().width,35));
 		createJB.setContentAreaFilled(false);
-		createJB.setFont(DEFAULT_FONT);
+		createJB.setFont(Globals.DEFAULT_FONT);
 		createJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -286,20 +289,14 @@ public class PrefabManagerWindow  extends JDialog{
 				0,SpringLayout.WEST, tiledSizeJL);
 		prefabParametersJP.add(textureJL);
 		
-		slayout2.putConstraint(SpringLayout.VERTICAL_CENTER, textureJTF, 
-				0,SpringLayout.VERTICAL_CENTER, textureJL);
-		slayout2.putConstraint(SpringLayout.WEST, textureJTF, 
-				5,SpringLayout.EAST, textureJL);
-		prefabParametersJP.add(textureJTF);
-		
-		slayout2.putConstraint(SpringLayout.VERTICAL_CENTER, browseLocationJB, 
-				0,SpringLayout.VERTICAL_CENTER, textureJL);
-		slayout2.putConstraint(SpringLayout.WEST, browseLocationJB, 
-				0,SpringLayout.EAST, textureJTF);
-		prefabParametersJP.add(browseLocationJB);
+		slayout2.putConstraint(SpringLayout.NORTH, assetPP, 
+				0,SpringLayout.NORTH, textureJL);
+		slayout2.putConstraint(SpringLayout.EAST, assetPP, 
+				0,SpringLayout.EAST, tiledHeightJTF);
+		prefabParametersJP.add(assetPP);
 		
 		slayout2.putConstraint(SpringLayout.NORTH, descriptionJL, 
-				5,SpringLayout.SOUTH, textureJL);
+				5,SpringLayout.SOUTH, assetPP);
 		slayout2.putConstraint(SpringLayout.WEST, descriptionJL, 
 				0,SpringLayout.WEST, textureJL);
 		prefabParametersJP.add(descriptionJL);
@@ -307,7 +304,7 @@ public class PrefabManagerWindow  extends JDialog{
 		slayout2.putConstraint(SpringLayout.NORTH, descriptionJSP, 
 				0,SpringLayout.NORTH, descriptionJL);
 		slayout2.putConstraint(SpringLayout.EAST, descriptionJSP, 
-				0,SpringLayout.EAST, browseLocationJB);
+				0,SpringLayout.EAST, assetPP);
 		prefabParametersJP.add(descriptionJSP);
 		
 		slayout2.putConstraint(SpringLayout.SOUTH, additiveAttributesJSP, 
@@ -319,8 +316,6 @@ public class PrefabManagerWindow  extends JDialog{
 		slayout2.putConstraint(SpringLayout.SOUTH, createJB, 
 				0,SpringLayout.SOUTH, prefabParametersJP);
 		prefabParametersJP.add(createJB);
-		
-		rebuildPrefabIndex();
 		
 		return prefabParametersJP;
 	}
@@ -341,7 +336,7 @@ public class PrefabManagerWindow  extends JDialog{
 				attributeJP.setLayout(slayout);
 				
 				JLabel attributeNameJL = new JLabel(a.getAttributeName()+": ");
-				attributeNameJL.setFont(PARAMETER_FONT);
+				attributeNameJL.setFont(Globals.PARAMETER_FONT);
 				attributeNameJL.setPreferredSize(new Dimension(100,20));
 				attributeNameJL.setHorizontalAlignment(JLabel.RIGHT);
 				
@@ -354,7 +349,7 @@ public class PrefabManagerWindow  extends JDialog{
 				case "boolean":
 					JCheckBox aaJCB = new JCheckBox();
 					aaJCB.setPreferredSize(new Dimension(50, 20));
-					aaJCB.setFont(DEFAULT_FONT);
+					aaJCB.setFont(Globals.DEFAULT_FONT);
 					
 					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaJCB, 
 							0,SpringLayout.VERTICAL_CENTER, attributeNameJL);
@@ -365,7 +360,7 @@ public class PrefabManagerWindow  extends JDialog{
 				case "integer":
 					JFormattedTextField aaIJFTF = new JFormattedTextField(new Integer(a.getAttributeValue()));
 					aaIJFTF.setPreferredSize(new Dimension(50, 20));
-					aaIJFTF.setFont(DEFAULT_FONT);
+					aaIJFTF.setFont(Globals.DEFAULT_FONT);
 					aaIJFTF.setHorizontalAlignment(JFormattedTextField.CENTER);
 					
 					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaIJFTF, 
@@ -377,7 +372,7 @@ public class PrefabManagerWindow  extends JDialog{
 				case "double":
 					JFormattedTextField aaDJFTF = new JFormattedTextField(new Double(a.getAttributeValue()));
 					aaDJFTF.setPreferredSize(new Dimension(50, 20));
-					aaDJFTF.setFont(DEFAULT_FONT);
+					aaDJFTF.setFont(Globals.DEFAULT_FONT);
 					aaDJFTF.setHorizontalAlignment(JFormattedTextField.CENTER);
 					
 					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaDJFTF, 
@@ -389,7 +384,7 @@ public class PrefabManagerWindow  extends JDialog{
 				case "sString":
 					JTextField aaJTF = new JTextField();
 					aaJTF.setPreferredSize(new Dimension(100, 20));
-					aaJTF.setFont(DEFAULT_FONT);
+					aaJTF.setFont(Globals.DEFAULT_FONT);
 					aaJTF.setHorizontalAlignment(JFormattedTextField.CENTER);
 					
 					slayout.putConstraint(SpringLayout.VERTICAL_CENTER, aaJTF, 
@@ -400,7 +395,7 @@ public class PrefabManagerWindow  extends JDialog{
 					break;
 				case "lString":
 					JTextArea aaJTA = new JTextArea();
-					aaJTA.setFont(DEFAULT_FONT);
+					aaJTA.setFont(Globals.DEFAULT_FONT);
 					aaJTA.setMargin(new Insets(5,5,5,5));
 					aaJTA.setLineWrap(true);
 					
@@ -425,12 +420,12 @@ public class PrefabManagerWindow  extends JDialog{
 			}
 		else{
 			JLabel msgJL = new JLabel("  No addditive attributes required");
-			msgJL.setFont(DEFAULT_FONT);
+			msgJL.setFont(Globals.DEFAULT_FONT);
 			additiveAttributesPanel.add(msgJL);
 			}
 	}
 	
-	private void rebuildPrefabIndex(){
+	private String generatePrefabIndex(){
 		String categoryIndex=GOBase.prefabCategoryBase.get(categoryJCB.getSelectedItem().toString()).getID();
 		int lastIndex = 0;
 		for(Prefab p : GOBase.prefabsBase)
@@ -439,18 +434,21 @@ public class PrefabManagerWindow  extends JDialog{
 				if(ind>lastIndex)
 					lastIndex=ind;
 			}
-		indexJTF.setText(categoryIndex+"_"+String.format("%02d", lastIndex+1));
+		return categoryIndex+"_"+String.format("%02d", lastIndex+1);
 	}
 
 	public void onCreateClicked(){
 		try{
 			//saving all the values into variables
-			String id = indexJTF.getText();
-			String categoryName = categoryJCB.getSelectedItem().toString();
 			int tw = Integer.valueOf(tiledWidthJTF.getText());
 			int th = Integer.valueOf(tiledHeightJTF.getText());
-			String textureAddress = textureJTF.getText();
+			String texture = assetName;
+			//if necessary information missed, throw an exception
+			if(tw==0 || th==0 || texture.isEmpty())
+				throw new Exception();
 			String description = descriptionJTA.getText();
+			String id = indexJTF.getText();
+			String categoryName = categoryJCB.getSelectedItem().toString();
 			
 			PrefabCategory category = GOBase.prefabCategoryBase.get(categoryName);
 			ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
@@ -468,25 +466,17 @@ public class PrefabManagerWindow  extends JDialog{
 					break;
 				}
 			}
-			//if some text fields are missing, throw an exception
-			if(tw==0 || th==0 || textureAddress.isEmpty())
-				throw new Exception();
-			//copy texture image to the textures folder
-			String textureAddress2 = "resourses/textures/"+id+textureAddress.substring(textureAddress.lastIndexOf('.'));
-			if(!textureAddress.equals(textureAddress2)){
-				Files.copy(Paths.get(textureAddress),Paths.get("src/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
-				Files.copy(Paths.get(textureAddress),Paths.get("bin/"+textureAddress2), StandardCopyOption.REPLACE_EXISTING);
-			}
+			
 			//if there is no prefab to edit, add new Prefab to the base
 			if(editPrefab==null)
-				GOBase.prefabsBase.add(new Prefab(id,GOBase.prefabCategoryBase.get(categoryName).getID(),tw,th,textureAddress2,description,additiveAttributes));
+				GOBase.prefabsBase.add(new Prefab(id,GOBase.prefabCategoryBase.get(categoryName).getID(),tw,th,texture,description,additiveAttributes));
 			//else - save the parameters to editPrefab
 			else{
 				editPrefab.setPrefabID(id);
 				editPrefab.setCategory(GOBase.prefabCategoryBase.get(categoryName).getID());
 				editPrefab.setTiledWidth(tw);
 				editPrefab.setTiledHeight(th);
-				editPrefab.setTextureAddress(textureAddress2);
+				editPrefab.setTextureName(texture);
 				editPrefab.setDesctiption(description);
 				editPrefab.setAdditiveAttributes(additiveAttributes);
 			}

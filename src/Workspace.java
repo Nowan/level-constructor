@@ -15,6 +15,8 @@ import javax.swing.SpringLayout;
 
 public class Workspace extends JPanel{
 	
+	private static final long serialVersionUID = 5180775942726499734L;
+
 	public Canvas canvas;
 	
 	private boolean showGrid;
@@ -46,6 +48,8 @@ public class Workspace extends JPanel{
 
 	public class Canvas extends JPanel implements MouseListener, MouseMotionListener{
 		
+		private static final long serialVersionUID = -7903971845661537054L;
+
 		private Level level;
 		
 		//Usual size of one tile in pixels
@@ -84,7 +88,6 @@ public class Workspace extends JPanel{
 			level = ConstructorWindow.globals.level;
 			//Counting the scale factor to make sure that tiles are using all available vertical space 
 			double sf = (ConstructorWindow.instance.workspace.getSize().getHeight())/(level.getHeight()*TILE_SIZE);
-			//setScaleFactor(sf);
 			setLevelSize(level.getWidth(),level.getHeight());
 			updateLevelImage();
 			for(int c=0;c<level.getWidth();c++)
@@ -344,10 +347,11 @@ public class Workspace extends JPanel{
 				}
 				else {
 					//if tile is not empty
-					if(indexMap[Math.min(activeTile.x,level.getWidth()-1)][Math.min(activeTile.y,level.getHeight()-1)]!=-1){
-						int width = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledWidth()*scaledTileSize;
-						int height = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getTiledHeight()*scaledTileSize;
-						Point mainTilePosition = getObjectMainTile(indexMap[activeTile.x][activeTile.y]);
+					int index =indexMap [Math.min(activeTile.x,level.getWidth()-1)][Math.min(activeTile.y,level.getHeight()-1)];
+					if(index!=-1){
+						int width = level.getObjects().get(index).getTiledWidth()*scaledTileSize;
+						int height = level.getObjects().get(index).getTiledHeight()*scaledTileSize;
+						Point mainTilePosition = getObjectMainTile(index);
 						g2d.drawRect(mainTilePosition.x*scaledTileSize, mainTilePosition.y*scaledTileSize, width, height);
 					}
 					else

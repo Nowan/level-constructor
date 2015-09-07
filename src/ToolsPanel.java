@@ -13,6 +13,8 @@ import javax.swing.event.ChangeListener;
 
 public class ToolsPanel extends JPanel{
 	
+	private static final long serialVersionUID = -4562661677620907150L;
+	
 	private JButton addTopRowJB;
 	private JButton removeTopRowJB;
 	private JButton addBottomRowJB;

@@ -1,4 +1,3 @@
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -15,7 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ConstructorMenuBar extends JMenuBar{
 	
-	private final Font DEFAULT_FONT = new Font("Verdana", Font.PLAIN,11);
+	private static final long serialVersionUID = 8899029156806897059L;
 	
 	private JMenu levelMenu;
 	private JMenuItem newLevel;
@@ -50,11 +49,11 @@ public class ConstructorMenuBar extends JMenuBar{
 	
 	private JMenu generateFileMenu(){
 		JMenu menu = new JMenu("Level");
-		menu.setFont(DEFAULT_FONT);
+		menu.setFont(Globals.DEFAULT_FONT);
 		
 		//Creating "New level" menu item
-		newLevel = new JMenuItem("New level");
-		newLevel.setFont(DEFAULT_FONT);
+		newLevel = new JMenuItem("New");
+		newLevel.setFont(Globals.DEFAULT_FONT);
 		newLevel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				onNewLevel_Click();
@@ -63,8 +62,8 @@ public class ConstructorMenuBar extends JMenuBar{
 		menu.add(newLevel);
 		
 		//Creating "Save level" menu item
-		saveLevel = new JMenuItem("Save level");
-		saveLevel.setFont(DEFAULT_FONT);
+		saveLevel = new JMenuItem("Save");
+		saveLevel.setFont(Globals.DEFAULT_FONT);
 		saveLevel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				onSaveLevel_Click();
@@ -73,8 +72,8 @@ public class ConstructorMenuBar extends JMenuBar{
 		menu.add(saveLevel);
 		
 		//Creating "Load level" menu item
-		loadLevel = new JMenuItem("Load level");
-		loadLevel.setFont(DEFAULT_FONT);
+		loadLevel = new JMenuItem("Load");
+		loadLevel.setFont(Globals.DEFAULT_FONT);
 		loadLevel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				onLoadLevel_Click();
@@ -85,8 +84,8 @@ public class ConstructorMenuBar extends JMenuBar{
 		menu.addSeparator();
 		
 		//Creating "Test level" menu item
-		runLevel = new JMenuItem("Run");
-		runLevel.setFont(DEFAULT_FONT);
+		runLevel = new JMenuItem("Run in emulator");
+		runLevel.setFont(Globals.DEFAULT_FONT);
 		runLevel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				onRunLevel_Click();
@@ -99,11 +98,11 @@ public class ConstructorMenuBar extends JMenuBar{
 	
 	private JMenu generateWorkspaceMenu(){
 		JMenu menu = new JMenu("Workspace");
-		menu.setFont(DEFAULT_FONT);
+		menu.setFont(Globals.DEFAULT_FONT);
 		
 		showGrid = new JCheckBoxMenuItem("Show grid");
 		//showGrid.setEnabled(false);
-		showGrid.setFont(DEFAULT_FONT);
+		showGrid.setFont(Globals.DEFAULT_FONT);
 		showGrid.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
 		    	  ConstructorWindow.instance.workspace.showGrid(showGrid.isSelected());
@@ -112,7 +111,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		
 		showObjectsBorder = new JCheckBoxMenuItem("Show objects border");
 		//showObjectsBorder.setEnabled(false);
-		showObjectsBorder.setFont(DEFAULT_FONT);
+		showObjectsBorder.setFont(Globals.DEFAULT_FONT);
 		showObjectsBorder.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
 		    	  ConstructorWindow.instance.workspace.showObjectBorder(showObjectsBorder.isSelected());
@@ -121,7 +120,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		
 		showTileIndexes = new JCheckBoxMenuItem("Show tile indexes");
 		//showTileIndexes.setEnabled(false);
-		showTileIndexes.setFont(DEFAULT_FONT);
+		showTileIndexes.setFont(Globals.DEFAULT_FONT);
 		showTileIndexes.addItemListener(new ItemListener() {
 		      public void itemStateChanged(ItemEvent e) {
 		    	  ConstructorWindow.instance.workspace.showTileIndex(showTileIndexes.isSelected());
@@ -130,7 +129,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		
 		//Creating "Test level" menu item
 		workspaceParameters = new JMenuItem("Parameters");
-		workspaceParameters.setFont(DEFAULT_FONT);
+		workspaceParameters.setFont(Globals.DEFAULT_FONT);
 		workspaceParameters.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				//onRunLevel_Click();
@@ -147,10 +146,10 @@ public class ConstructorMenuBar extends JMenuBar{
 	
 	private JMenu generateToolsMenu(){
 		JMenu menu = new JMenu("Tools");
-		menu.setFont(DEFAULT_FONT);
+		menu.setFont(Globals.DEFAULT_FONT);
 		
 		JMenuItem goManager = new JMenuItem("Game Object Manager");
-		goManager.setFont(DEFAULT_FONT);
+		goManager.setFont(Globals.DEFAULT_FONT);
 		goManager.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				ConstructorWindow.goManager.setVisible(true);
@@ -178,20 +177,23 @@ public class ConstructorMenuBar extends JMenuBar{
 	}
 	
 	private void onNewLevel_Click(){
+		//new NewLevelDialog();
 		ConstructorWindow.instance.workspace.setLevel(new Level(30,12));
 		ConstructorWindow.instance.setWorkingState(true);
-		showGrid.setSelected(true);
-		showObjectsBorder.setSelected(true);
+		//showGrid.setSelected(true);
+		//showObjectsBorder.setSelected(true);
 	}
 	
 	private void onSaveLevel_Click(){
-		int returnValue = fileChooser.showSaveDialog(ConstructorWindow.instance);
-		if (returnValue == JFileChooser.APPROVE_OPTION) {
-	          File selectedFile = fileChooser.getSelectedFile();
-	          String fileAddress = selectedFile.getAbsolutePath();
+		String fileAddress = ConstructorWindow.globals.level.getFileAddress();
+		if(fileAddress==null){
+			int returnValue = fileChooser.showSaveDialog(ConstructorWindow.instance);
+			if (returnValue == JFileChooser.APPROVE_OPTION) {	
+				File selectedFile = fileChooser.getSelectedFile();
+				fileAddress = selectedFile.getAbsolutePath();
 	          
-	          new JOptionPane();
-	          if (selectedFile.exists()){
+				new JOptionPane();
+				if (selectedFile.exists()){
 					int n = JOptionPane.showConfirmDialog(
 	      			  	ConstructorWindow.instance,
 	      			    "File already exists. Do you really want to override it?",
@@ -199,15 +201,16 @@ public class ConstructorMenuBar extends JMenuBar{
 	      			    JOptionPane.YES_NO_OPTION);
 	        	  	if(n!=0)
 	        	  		return;
-		      }
-	          
-	          boolean operationSuccess = Globals.xmlConverter.saveLevel(fileAddress);
-	          if(operationSuccess)
-	        	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "File successfully saved");
-	          else
-	        	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "Couldn't save the file","Error", JOptionPane.ERROR_MESSAGE);
-	        	  
-	    }
+				}
+			}
+			else return;
+		}
+		
+		boolean operationSuccess = Globals.xmlConverter.saveLevel(fileAddress);
+        if(operationSuccess)
+      	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "File successfully saved");
+        else
+      	  JOptionPane.showMessageDialog(ConstructorWindow.instance, "Couldn't save the file","Error", JOptionPane.ERROR_MESSAGE);
 	}
 	
 	private void onLoadLevel_Click(){

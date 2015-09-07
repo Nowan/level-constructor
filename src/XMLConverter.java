@@ -53,7 +53,7 @@ public class XMLConverter {
 					String categoryID = eElement.getAttribute("category");
 					int tiledWidth = Integer.parseInt(eElement.getAttribute("tiledwidth"));
 					int tiledHeight = Integer.parseInt(eElement.getAttribute("tiledheight"));
-					String textureAddress= eElement.getElementsByTagName("texture").item(0).getTextContent();
+					String textureAddress= Globals.TEXTURES_FOLDER+GOBase.prefabCategoryBase.getCategoryByID(categoryID).getName()+"/"+eElement.getElementsByTagName("texture").item(0).getTextContent();
 					String description= eElement.getElementsByTagName("description").item(0).getTextContent();
 					
 					ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
@@ -97,7 +97,7 @@ public class XMLConverter {
 				prefab.setAttribute("tiledheight", String.valueOf(P.getTiledHeight()));
 				
 				Element texture = doc.createElement("texture");
-				texture.appendChild(doc.createTextNode(P.getTextureAddress()));
+				texture.appendChild(doc.createTextNode(P.getTextureName()));
 				prefab.appendChild(texture);
 				
 				Element description = doc.createElement("description");
@@ -229,11 +229,20 @@ public class XMLConverter {
 				Element gameObject = doc.createElement("gameobject");
 				objectsElement.appendChild(gameObject);
 				
-				gameObject.setAttribute("prefab", go.getPrefab().getPrefabID());
+				gameObject.setAttribute("category", go.getPrefab().getCategoryID());
 				gameObject.setAttribute("posx", String.valueOf(go.getPosition().x));
 				gameObject.setAttribute("posy", String.valueOf(go.getPosition().y));
 				gameObject.setAttribute("width", String.valueOf(go.getTiledWidth()));
 				gameObject.setAttribute("height", String.valueOf(go.getTiledHeight()));
+				gameObject.setAttribute("texture", go.getPrefab().getPrefabID());
+				
+				for(AdditiveAttribute a : go.getPrefab().getAdditiveAttributes()){
+					Element additiveAttribute = doc.createElement("additiveattribute");
+					additiveAttribute.setAttribute("name", a.getAttributeName().toLowerCase());
+					additiveAttribute.setAttribute("type", a.getAttributeType());
+					additiveAttribute.setAttribute("value", a.getAttributeValue());
+					gameObject.appendChild(additiveAttribute);
+				}
 			}
 			// write the content into xml file
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -242,7 +251,7 @@ public class XMLConverter {
 			StreamResult result = new StreamResult(new File(fileAddress));
 
 			transformer.transform(source, result);
-
+			level.setFileAddress(fileAddress);
 			return true;
 		} 
 		catch (Exception ex) {
@@ -275,7 +284,7 @@ public class XMLConverter {
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 					Element eElement = (Element) nNode;
 					
-					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("prefab"));
+					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("texture"));
 					int posX = Integer.valueOf(eElement.getAttribute("posx"));
 					int posY = Integer.valueOf(eElement.getAttribute("posy"));
 					
@@ -283,6 +292,7 @@ public class XMLConverter {
 				}
 			}
 			level.setObjects(gameObjects);
+			level.setFileAddress(fileAddress);
 			return level;
 		    } catch (Exception e) {
 			e.printStackTrace();

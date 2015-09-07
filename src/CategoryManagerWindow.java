@@ -26,6 +26,8 @@ import javax.swing.SpringLayout;
 
 public class CategoryManagerWindow extends JDialog{
 	
+	private static final long serialVersionUID = 2449779704731952929L;
+	
 	public static final int PREFAB_TYPE = 0;
 	public static final int PARTICLE_TYPE = 1;
 	public static final int BACKGROUND_TYPE = 2;
@@ -150,6 +152,7 @@ public class CategoryManagerWindow extends JDialog{
 						System.out.println(pcn);
 						Globals.xmlConverter.savePrefabBase();
 						ConstructorWindow.goManager.refresh();
+						ConstructorWindow.instance.collectionsPanel.tilesTab.refreshCategoryList();
 						}
 					//if category list will become empty after deleting this object, disable remove btn and select nothing
 					if(listModel.size()==1){

@@ -57,7 +57,9 @@ public class PrefabCategory {
 	}
 
 	public class AdditiveAttributesList extends ArrayList<AdditiveAttribute>{
-		
+
+		private static final long serialVersionUID = -2838885814820561707L;
+
 		public AdditiveAttributesList(){
 			super();
 		}

@@ -8,6 +8,8 @@ import javax.swing.JTabbedPane;
 
 public class CollectionsPanel extends JTabbedPane{
 	
+	private static final long serialVersionUID = -3867895600313777957L;
+	
 	public TilesTab tilesTab;
 	
 	public CollectionsPanel(){

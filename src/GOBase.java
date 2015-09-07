@@ -15,6 +15,8 @@ public class GOBase{
 	
 	protected class PrefabsBase extends ArrayList<Prefab>{
 		
+		private static final long serialVersionUID = 3101554695555133405L;
+
 		protected PrefabsBase(){
 			super();
 			fill();
@@ -51,6 +53,8 @@ public class GOBase{
 	
 	protected class PrefabCategoryBase extends ArrayList<PrefabCategory>{
 		
+		private static final long serialVersionUID = 2337950279372944792L;
+
 		protected PrefabCategoryBase(){
 			super();
 			fill();

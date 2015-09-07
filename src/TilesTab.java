@@ -10,6 +10,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -22,12 +24,14 @@ import javax.swing.table.DefaultTableModel;
 
 public class TilesTab extends JPanel{
 	
+	private static final long serialVersionUID = 5410462936467217548L;
+
 	//navigation panel, shows all existing prefabs in the game 
 	private JPanel prefabsPane;
 	
 	//filters for prefabsPane
 	private JComboBox<String> selectCategoryJCB;
-	private DefaultListModel<String> listModel;
+	private DefaultComboBoxModel<String> comboBoxModel;
 	
 	//panel, which displays parameters of selected prefab
 	private InspectorPanel inspectorPanel;
@@ -44,10 +48,10 @@ public class TilesTab extends JPanel{
 		
 		//adding filters for prefabsPane to the content panel
 		JPanel FilterPane = new JPanel(new GridLayout(1,2));
-		listModel = new DefaultListModel<String>();
+		comboBoxModel = new DefaultComboBoxModel<String>();
 		for(PrefabCategory p : GOBase.prefabCategoryBase)
-			listModel.addElement(p.getName());
-		selectCategoryJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
+			comboBoxModel.addElement(p.getName());
+		selectCategoryJCB = new JComboBox<String>(comboBoxModel);
 		selectCategoryJCB.setPreferredSize(new Dimension(150,25));
 		selectCategoryJCB.setFont(Globals.DEFAULT_FONT);
 		selectCategoryJCB.addActionListener (new ActionListener () {
@@ -90,10 +94,10 @@ public class TilesTab extends JPanel{
 	}
 	
 	public void refreshCategoryList(){
-		listModel.clear();
+		comboBoxModel.removeAllElements();
 		for(PrefabCategory p : GOBase.prefabCategoryBase)
-			listModel.addElement(p.getName());
-		if(selectCategoryJCB.getSelectedIndex()>=listModel.size())
+			comboBoxModel.addElement(p.getName());
+		if(selectCategoryJCB.getSelectedIndex()>=comboBoxModel.getSize())
 			selectCategoryJCB.setSelectedIndex(0);
 	}
 
@@ -103,7 +107,7 @@ public class TilesTab extends JPanel{
 		prefabsPane.removeAll();
 		
 		for(Prefab P : GOBase.prefabsBase){
-			if(P.getCategory().getName().equals(selectCategoryJCB.getSelectedItem().toString()))
+			if(selectCategoryJCB.getItemCount()!=0&&P.getCategory().getName().equals(selectCategoryJCB.getSelectedItem().toString()))
 				prefabsPane.add(new PrefabPreviewItem(P));
 		}
 		
@@ -143,6 +147,8 @@ public class TilesTab extends JPanel{
 	}
 	
 	public class InspectorPanel extends JPanel{
+
+		private static final long serialVersionUID = 7043675609601172072L;
 		
 		private JTable prefabInfoTable;
 		private DefaultTableModel tableModel;
@@ -186,66 +192,11 @@ public class TilesTab extends JPanel{
 		
 	}
 	
-	private class PreviewPanel extends JPanel{
-		
-		//original image of selected tile
-		private BufferedImage image;
-
-		public PreviewPanel(){
-			this.setBackground(Color.BLACK);
-			//at start, preview panel is empty
-			this.hideImage();
-		}
-		
-		//set image to preview
-		public void setImage(BufferedImage image){
-			this.image=resizeImage(image);
-			repaint();
-		}
-		
-		private BufferedImage resizeImage(BufferedImage originalImage){
-			int type = originalImage.getType() == 0? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
-			BufferedImage resizedImage = new BufferedImage(this.getWidth(), this.getHeight(), type);
-			Graphics2D g = resizedImage.createGraphics();
-			
-			float scaleFactor = (float)((this.getPreferredSize().width+ this.getPreferredSize().height)/2)/Math.max(originalImage.getWidth(), originalImage.getHeight());
-			int resizedWidth = (int)(originalImage.getWidth()*scaleFactor);
-			int resizedHeight = (int)(originalImage.getHeight()*scaleFactor);
-			int posX = this.getPreferredSize().width/2 - resizedWidth/2;
-			int posY = this.getPreferredSize().height/2 - resizedHeight/2;
-			
-			g.drawImage(originalImage, posX, posY, resizedWidth, resizedHeight, null);
-			g.dispose();
-		 
-			return resizedImage;
-		}
-		
-		//hide image from preview
-		public void hideImage(){
-			image = null;
-			repaint();
-		}
-		
-		@Override
-		public void paint(Graphics g)
-		{
-			super.paint(g);
-			//if no image is attached, do nothing
-			if(image==null) return;
-			//elsewise draw image
-			g.drawImage(image,0,0,null);
-		} 
-		
-		@Override
-		public void setEnabled(boolean arg0){
-			for(int i=0;i<getComponentCount();i++)
-				getComponent(i).setEnabled(arg0);
-		}
-	}
-	
 	//a class for an item in the prefabsPane 
 	public class PrefabPreviewItem extends JButton{
-		
+
+		private static final long serialVersionUID = -4678692180864899020L;
+
 		//tile, to which it linked to
 		private Prefab prefab;
 		
@@ -353,4 +304,5 @@ public class TilesTab extends JPanel{
 			onFilterChanged();
 		}
 	}
+	
 }

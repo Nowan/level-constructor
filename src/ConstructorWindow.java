@@ -7,7 +7,9 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
 public class ConstructorWindow extends JFrame implements MouseListener{
-	
+
+	private static final long serialVersionUID = -5926663196650950794L;
+
 	//Making public instance of the main window to make an access to it easier
 	public static final ConstructorWindow instance = new ConstructorWindow();
 	
