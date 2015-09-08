@@ -15,9 +15,9 @@ import org.w3c.dom.NodeList;
 
 public class XMLConverter {
 	
-	private static final String PREFAB_BASE_ADDRESS = "src/resourses/prefabsbase.xml";
+	private static final String PREFAB_BASE_ADDRESS = "bin/resourses/prefabsbase.xml";
 	
-	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "src/resourses/prefabcategorybase.xml";
+	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "bin/resourses/prefabcategorybase.xml";
 	
 	private File fXmlFile;
 	private DocumentBuilderFactory dbFactory;
@@ -222,7 +222,7 @@ public class XMLConverter {
 			rootElement.setAttribute("defaultheight", String.valueOf(level.getDefaultHeight()));
 			doc.appendChild(rootElement);
 			
-			Element objectsElement = doc.createElement("objects");
+			Element objectsElement = doc.createElement("gameobjects");
 			rootElement.appendChild(objectsElement);
 			
 			for(GameObject go : ConstructorWindow.globals.level.getObjects()){
@@ -230,11 +230,12 @@ public class XMLConverter {
 				objectsElement.appendChild(gameObject);
 				
 				gameObject.setAttribute("category", go.getPrefab().getCategoryID());
+				gameObject.setAttribute("prefab", go.getPrefab().getPrefabID());
 				gameObject.setAttribute("posx", String.valueOf(go.getPosition().x));
 				gameObject.setAttribute("posy", String.valueOf(go.getPosition().y));
 				gameObject.setAttribute("width", String.valueOf(go.getTiledWidth()));
 				gameObject.setAttribute("height", String.valueOf(go.getTiledHeight()));
-				gameObject.setAttribute("texture", go.getPrefab().getPrefabID());
+				gameObject.setAttribute("texture", go.getPrefab().getTextureName());
 				
 				for(AdditiveAttribute a : go.getPrefab().getAdditiveAttributes()){
 					Element additiveAttribute = doc.createElement("additiveattribute");
@@ -277,14 +278,14 @@ public class XMLConverter {
 			
 			ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
 			
-			Element objectsElement = (Element)levelElement.getElementsByTagName("objects").item(0);
+			Element objectsElement = (Element)levelElement.getElementsByTagName("gameobjects").item(0);
 			NodeList nList = objectsElement.getElementsByTagName("gameobject");
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 				Node nNode = nList.item(temp);
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 					Element eElement = (Element) nNode;
 					
-					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("texture"));
+					Prefab prefab = GOBase.prefabsBase.get(eElement.getAttribute("prefab"));
 					int posX = Integer.valueOf(eElement.getAttribute("posx"));
 					int posY = Integer.valueOf(eElement.getAttribute("posy"));
 					

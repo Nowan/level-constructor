@@ -438,18 +438,20 @@ public class PrefabManagerWindow  extends JDialog{
 	}
 
 	public void onCreateClicked(){
-		try{
+
 			//saving all the values into variables
 			int tw = Integer.valueOf(tiledWidthJTF.getText());
 			int th = Integer.valueOf(tiledHeightJTF.getText());
-			String texture = assetName;
 			//if necessary information missed, throw an exception
-			if(tw==0 || th==0 || texture.isEmpty())
-				throw new Exception();
+			if(tw==0 || th==0 || assetName==null){
+				JOptionPane.showMessageDialog(this,"Some fields are missing","ERROR", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 			String description = descriptionJTA.getText();
 			String id = indexJTF.getText();
 			String categoryName = categoryJCB.getSelectedItem().toString();
-			
+			String textureAddress = Globals.TEXTURES_FOLDER+categoryName+"/"+assetName;
+			System.out.println(textureAddress);
 			PrefabCategory category = GOBase.prefabCategoryBase.get(categoryName);
 			ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
 			for(int i=0;i<category.getAdditiveAttributes().size();i++){
@@ -469,14 +471,14 @@ public class PrefabManagerWindow  extends JDialog{
 			
 			//if there is no prefab to edit, add new Prefab to the base
 			if(editPrefab==null)
-				GOBase.prefabsBase.add(new Prefab(id,GOBase.prefabCategoryBase.get(categoryName).getID(),tw,th,texture,description,additiveAttributes));
+				GOBase.prefabsBase.add(new Prefab(id,category.getID(),tw,th,textureAddress,description,additiveAttributes));
 			//else - save the parameters to editPrefab
 			else{
 				editPrefab.setPrefabID(id);
 				editPrefab.setCategory(GOBase.prefabCategoryBase.get(categoryName).getID());
 				editPrefab.setTiledWidth(tw);
 				editPrefab.setTiledHeight(th);
-				editPrefab.setTextureName(texture);
+				editPrefab.setTextureName(assetName);
 				editPrefab.setDesctiption(description);
 				editPrefab.setAdditiveAttributes(additiveAttributes);
 			}
@@ -487,12 +489,7 @@ public class PrefabManagerWindow  extends JDialog{
 			ConstructorWindow.goManager.refresh();
 			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			mainLink.dispose();
-		}
-		catch(Exception ex){
-			System.out.println(ex.getMessage());
-			JOptionPane.showMessageDialog(this,"Some fields are missing",
-					"", JOptionPane.ERROR_MESSAGE);
-		}
+		
 	}
 
 }

@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><prefabcategorybase><prefabcategory id="clg" isObstacle="false" name="ceiling"/><prefabcategory id="flr" isObstacle="false" name="floor"><additiveattribute defaultvalue="0.5" name="acceleration" type="double"/></prefabcategory><prefabcategory id="nc1" isObstacle="false" name="new_category_1"/></prefabcategorybase>

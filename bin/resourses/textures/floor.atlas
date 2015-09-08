@@ -1,0 +1,13 @@
+
+floor.png
+size: 512,128
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+flr-01
+  rotate: false
+  xy: 2, 2
+  size: 378, 116
+  orig: 378, 116
+  offset: 0, 0
+  index: -1

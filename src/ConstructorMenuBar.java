@@ -36,7 +36,7 @@ public class ConstructorMenuBar extends JMenuBar{
 		fileChooser=new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("XML file", new String[] {"xml"});
 		fileChooser.setFileFilter(filter);
-		fileChooser.setCurrentDirectory(new File("./bin/levels"));
+		fileChooser.setCurrentDirectory(new File(Globals.LEVELS_FOLDER));
 		
 		levelMenu = generateFileMenu();
 		workspaceMenu = generateWorkspaceMenu();

@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,9 +72,24 @@ public class GOManagerWindow extends JDialog{
 		
 		add(generateContent());
 		setJMenuBar(generateMenuBar());
-		if(GOBase.prefabsBase.size()!=0)
-			showPrefabAttributes(GOBase.prefabsBase.get(0).getPrefabID());
+		showPrefabAttributes(null);
 		
+		this.addWindowListener(new WindowListener(){
+			@Override public void windowActivated(WindowEvent e) {}
+			@Override public void windowDeactivated(WindowEvent e) {}
+			@Override public void windowDeiconified(WindowEvent e) {}
+			@Override public void windowIconified(WindowEvent e) {}
+			@Override public void windowOpened(WindowEvent e) {}
+			@Override public void windowClosed(WindowEvent e) {}
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				prefabsList.clearSelection();
+				showPrefabAttributes(null);
+				if(multiplySelection) setMultiplySelection(false);
+			}
+		});
+			
 		setVisible(false);
 	}
 	
@@ -86,7 +103,7 @@ public class GOManagerWindow extends JDialog{
 		for(Prefab p : GOBase.prefabsBase)
 			listModel.addElement(p.getPrefabID());
 		prefabsList = new JList<String>(listModel);
-		prefabsList.setSelectedIndex(0);
+		//prefabsList.setSelectedIndex(0);
 		prefabsList.addMouseListener(new MouseListener(){
 			@Override public void mouseClicked(MouseEvent arg0) {}
 
@@ -94,17 +111,26 @@ public class GOManagerWindow extends JDialog{
 
 			@Override
 			public void mouseExited(MouseEvent arg0) {
-				if(!multiplySelection && prefabsList.getSelectedValue().toString()!=currentlyShowedPrefab.getPrefabID())
-					showPrefabAttributes(prefabsList.getSelectedValue().toString());
+				if(!multiplySelection && currentlyShowedPrefab!=null){
+					if(!prefabsList.isSelectionEmpty()&&prefabsList.getSelectedValue().toString()!=currentlyShowedPrefab.getPrefabID())
+						showPrefabAttributes(prefabsList.getSelectedValue().toString());
+					else if(prefabsList.isSelectionEmpty())
+						showPrefabAttributes(null);
+					}
 			}
 
 			@Override
 			public void mousePressed(MouseEvent arg0) {
-				if(!editMode){
+				if(arg0.getButton()==MouseEvent.BUTTON1&&!editMode){
 					if(prefabsList.getSelectedIndices().length>1)
 						setMultiplySelection(true);
 					else
 						setMultiplySelection(false);
+				}
+				else if(arg0.getButton()==MouseEvent.BUTTON3){
+					prefabsList.clearSelection();
+					showPrefabAttributes(null);
+					if(multiplySelection) setMultiplySelection(false);
 				}
 			}
 			
@@ -252,17 +278,26 @@ public class GOManagerWindow extends JDialog{
 	}
 	
 	private void showPrefabAttributes(String prefabID){
-		currentlyShowedPrefab=GOBase.prefabsBase.get(prefabID);
-		indexJTF.setText(currentlyShowedPrefab.getPrefabID());
-		displayPrefabJP.setImage(currentlyShowedPrefab.getTexture());
-		
-		if(prefabsList.getSelectedValue()==currentlyShowedPrefab.getPrefabID()){
-			if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
-			if(!editJB.isEnabled())editJB.setEnabled(true);
-		}
-		else{
+		if(prefabID==null){
+			currentlyShowedPrefab=null;
+			indexJTF.setText("index");
+			displayPrefabJP.hideImage();
 			if(deleteJB.isEnabled())deleteJB.setEnabled(false);
 			if(editJB.isEnabled())editJB.setEnabled(false);
+		}
+		else{
+			currentlyShowedPrefab=GOBase.prefabsBase.get(prefabID);
+			indexJTF.setText(currentlyShowedPrefab.getPrefabID());
+			displayPrefabJP.setImage(currentlyShowedPrefab.getTexture());
+			
+			if(prefabsList.getSelectedValue()==currentlyShowedPrefab.getPrefabID()){
+				if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
+				if(!editJB.isEnabled())editJB.setEnabled(true);
+			}
+			else{
+				if(deleteJB.isEnabled())deleteJB.setEnabled(false);
+				if(editJB.isEnabled())editJB.setEnabled(false);
+			}
 		}
 	}
 	
@@ -278,12 +313,15 @@ public class GOManagerWindow extends JDialog{
 			for(Component c : prefabParametersJP.getComponents())
 				c.setVisible(true);
 			selectedItemsJL.setVisible(false);
+			if(!prefabsList.isSelectionEmpty()){
 			String selectedID = prefabsList.getSelectedValue().toString();
-			if(selectedID!=currentlyShowedPrefab.getPrefabID())
+			if(currentlyShowedPrefab!=null && selectedID!=currentlyShowedPrefab.getPrefabID())
 				showPrefabAttributes(selectedID);
-			
 			if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
 			if(!editJB.isEnabled())editJB.setEnabled(true);
+			}
+			else
+				showPrefabAttributes(null);
 		}
 	}
 	
@@ -307,25 +345,33 @@ public class GOManagerWindow extends JDialog{
 	}
 	
 	private void onMouseMoved(MouseEvent e){
-		if(!editMode && !multiplySelection){
+		if(!editMode && !multiplySelection && GOBase.prefabsBase.size()!=0){
 			String[] collection = GOBase.prefabsBase.getIDCollection();
 			int index = prefabsList.locationToIndex(e.getPoint());
-			if(collection[index]!=currentlyShowedPrefab.getPrefabID())
-				showPrefabAttributes(collection[index]);
+			if(currentlyShowedPrefab!=null&&collection[index]==currentlyShowedPrefab.getPrefabID())
+				return;
+			showPrefabAttributes(collection[index]);
 		}
 	}
 	
 	public void refresh(){
 		if(GOBase.prefabsBase.size()>0){
-		int selectedIndex = prefabsList.getSelectedIndex();
-		listModel.removeAllElements();
-		for(Prefab p : GOBase.prefabsBase)
-			listModel.addElement(p.getPrefabID());
-		if(selectedIndex<listModel.size())
-			prefabsList.setSelectedIndex(selectedIndex);
-		else
-			prefabsList.setSelectedIndex(listModel.size()-1);
-		showPrefabAttributes((GOBase.prefabsBase.get(prefabsList.getSelectedValue().toString()).getPrefabID()));
+			if(prefabsList.isSelectionEmpty()){
+				listModel.removeAllElements();
+				for(Prefab p : GOBase.prefabsBase)
+					listModel.addElement(p.getPrefabID());
+			}
+			else{
+				int selectedIndex = prefabsList.getSelectedIndex();
+				listModel.removeAllElements();
+				for(Prefab p : GOBase.prefabsBase)
+					listModel.addElement(p.getPrefabID());
+				if(selectedIndex<listModel.size())
+					prefabsList.setSelectedIndex(selectedIndex);
+				else
+					prefabsList.setSelectedIndex(listModel.size()-1);
+				showPrefabAttributes((GOBase.prefabsBase.get(prefabsList.getSelectedValue().toString()).getPrefabID()));
+			}
 		}
 	}
 	
