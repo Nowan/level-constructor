@@ -95,11 +95,13 @@ public class Level {
 		    });
 			//rebuild index map in canvas
 			int [][] indexMap = ConstructorWindow.instance.workspace.canvas.indexMap;
-			for(int i=0;i<this.size();i++)
+			for(int i=0;i<this.size();i++){
 				for(int c=0;c<this.get(i).getTiledWidth();c++)
-					for(int l=0;l<this.get(i).getTiledHeight();l++){
+					for(int l=0;l<this.get(i).getTiledHeight();l++)
 						indexMap[this.get(i).getPosition().x+c][this.get(i).getPosition().y+l]=i;
-					}
+				this.get(i).setIndex(i);
+			}
+					
 			return returnBit;
 		}
 		
@@ -121,6 +123,7 @@ public class Level {
 				for(int c=0;c<objectWidth;c++)
 					for(int l=0;l<objectHeight;l++)
 						indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
+				this.get(i).setIndex(i);
 			}
 			return returnObject;
 		}
@@ -143,7 +146,8 @@ public class Level {
 				for(int c=0;c<objectWidth;c++)
 					for(int l=0;l<objectHeight;l++)
 						if(get(i).getPosition().x+c<ConstructorWindow.globals.level.getWidth()&&get(i).getPosition().y+l<ConstructorWindow.globals.level.getHeight())
-						indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
+							indexMap[get(i).getPosition().x+c][get(i).getPosition().y+l] = i;
+				this.get(i).setIndex(i);
 			}
 			return returnObject;
 		}

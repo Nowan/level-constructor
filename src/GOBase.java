@@ -26,6 +26,9 @@ public class GOBase{
 		public void fill(){
 			for(Prefab p : xmlConverter.loadPrefabBase())
 				this.add(p);
+			for(Prefab p : this)
+				if(p.getPrefabID().equals("udr_01"))
+					p.setSlavePrefab(this.get("udr_02"));
 		}
 		
 		//refresh the list

@@ -250,6 +250,7 @@ public class Workspace extends JPanel{
 			workspacePointer.revalidate();
 		}
 		
+		//repaints the image with all game objects
 		private void updateLevelImage(){
 			if(level==null||level.getObjects().isEmpty())
 				return;
@@ -307,8 +308,10 @@ public class Workspace extends JPanel{
 			super.paint(g);
 			Graphics2D g2d = (Graphics2D)g;
 			
+			//draw level objects
 			if(level!=null&&!level.getObjects().isEmpty())
 				g2d.drawImage(scaledLevelImage, 0, 0, null);
+			//draw grid
 			if(showGrid){
 				g2d.setColor(Color.GRAY);
 				g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));
@@ -321,7 +324,7 @@ public class Workspace extends JPanel{
 				g2d.setColor(Color.BLACK);
 				g2d.setStroke(new BasicStroke(1));
 			}
-			
+			//draw tile indexes
 			if(showTileIndex){
 				for(int h=1;h<=level.getHeight();h++){
 					for(int w=1;w<=level.getWidth();w++){
@@ -335,7 +338,7 @@ public class Workspace extends JPanel{
 				}
 				g2d.setColor(Color.BLACK);
 			}
-			
+			//draw pointer of active tile
 			if(activeTile!=null){
 				int posX=(int)activeTile.getX()*scaledTileSize;
 				int posY=(int)activeTile.getY()*scaledTileSize;
@@ -343,16 +346,63 @@ public class Workspace extends JPanel{
 				if(Globals.toolBox.insertionTool.isActive()){
 					Prefab prefab = Globals.toolBox.insertionTool.getPrefab();
 					g2d.drawImage(resizedTile, posX, posY, null);
-					g2d.drawRect(posX, posY, prefab.getTiledWidth()*scaledTileSize, prefab.getTiledHeight()*scaledTileSize);
+					//if selected prefab is linked, draw a pointer to master
+					if(Globals.toolBox.insertionTool.hasMasterObject()){
+						GameObject masterObject= Globals.toolBox.insertionTool.getMasterObject();
+						int masterPositionX = masterObject.getPosition().x*scaledTileSize;
+						int masterPositionY = masterObject.getPosition().y*scaledTileSize;
+						int masterWidth = masterObject.getTiledWidth()*scaledTileSize;
+						int masterHeight = masterObject.getTiledHeight()*scaledTileSize;
+						g2d.drawRect(masterPositionX, masterPositionY, masterWidth, masterHeight);
+						g2d.drawRect(posX, posY, prefab.getTiledWidth()*scaledTileSize, prefab.getTiledHeight()*scaledTileSize);
+						
+						g2d.setColor(Color.RED);
+						g2d.drawLine(masterPositionX+masterWidth/2, masterPositionY+masterHeight/2,
+								posX+prefab.getTiledWidth()*scaledTileSize/2,
+								posY+prefab.getTiledHeight()*scaledTileSize/2);
+						g2d.fillRect(masterPositionX+masterWidth/2-3, masterPositionY+masterHeight/2-3, 6, 6);
+						g2d.fillRect(posX+prefab.getTiledWidth()*scaledTileSize/2-3, 
+								posY+prefab.getTiledHeight()*scaledTileSize/2-3, 6, 6);
+						g2d.setColor(Color.BLACK);
+					}
+					else
+						g2d.drawRect(posX, posY, prefab.getTiledWidth()*scaledTileSize, prefab.getTiledHeight()*scaledTileSize);
 				}
+				//if insertion tool is inactive - show object borders and their info
 				else {
 					//if tile is not empty
 					int index =indexMap [Math.min(activeTile.x,level.getWidth()-1)][Math.min(activeTile.y,level.getHeight()-1)];
 					if(index!=-1){
-						int width = level.getObjects().get(index).getTiledWidth()*scaledTileSize;
-						int height = level.getObjects().get(index).getTiledHeight()*scaledTileSize;
+						GameObject currentObject=level.getObjects().get(index);
+						int width = currentObject.getTiledWidth()*scaledTileSize;
+						int height = currentObject.getTiledHeight()*scaledTileSize;
 						Point mainTilePosition = getObjectMainTile(index);
-						g2d.drawRect(mainTilePosition.x*scaledTileSize, mainTilePosition.y*scaledTileSize, width, height);
+						//if active tile doesn't have linked objects, draw it's border
+						if(!currentObject.isComplex())
+							g2d.drawRect(mainTilePosition.x*scaledTileSize, mainTilePosition.y*scaledTileSize, width, height);
+						else{
+							//if this object has links, draw pointers to them
+							GameObject linkedObject = null;
+							if(currentObject.isMaster())
+								linkedObject=currentObject.getSlave();
+							else if(currentObject.isSlave())
+								linkedObject=currentObject.getMaster();
+							
+							Point masterPosition = new Point(linkedObject.getPosition().x*scaledTileSize,linkedObject.getPosition().y*scaledTileSize);
+							Point masterSize = new Point(linkedObject.getTiledWidth()*scaledTileSize,linkedObject.getTiledHeight()*scaledTileSize);
+							Point masterCenter = new Point(masterPosition.x+masterSize.x/2,masterPosition.y+masterSize.y/2);
+							Point mainPosition = new Point(mainTilePosition.x*scaledTileSize,mainTilePosition.y*scaledTileSize);
+							Point mainSize = new Point(currentObject.getTiledWidth()*scaledTileSize,currentObject.getTiledHeight()*scaledTileSize);
+							Point mainCenter = new Point(mainPosition.x+currentObject.getTiledWidth()*scaledTileSize/2,mainPosition.y+currentObject.getTiledHeight()*scaledTileSize/2);
+							g2d.drawRect(masterPosition.x, masterPosition.y, masterSize.x, masterSize.y);
+							g2d.drawRect(mainPosition.x, mainPosition.y, mainSize.x, mainSize.y);
+							
+							g2d.setColor(Color.RED);
+							g2d.drawLine(masterCenter.x, masterCenter.y, mainCenter.x,mainCenter.y);
+							g2d.fillRect(masterCenter.x-3, masterCenter.y-3, 6, 6);
+							g2d.fillRect(mainCenter.x-3, mainCenter.y-3, 6, 6);
+							g2d.setColor(Color.BLACK);
+						}
 					}
 					else
 						g2d.drawRect(posX, posY, scaledTileSize, scaledTileSize);
@@ -385,8 +435,9 @@ public class Workspace extends JPanel{
 			if(!isEnabled()) return;
 			if(arg0.getButton()==MouseEvent.BUTTON1&&Globals.toolBox.insertionTool.isActive()){
 				boolean overlapsSmth = false;
-				int prefabWidth = Globals.toolBox.insertionTool.getPrefab().getTiledWidth();
-				int prefabHeight = Globals.toolBox.insertionTool.getPrefab().getTiledHeight();
+				Prefab prefab = Globals.toolBox.insertionTool.getPrefab();
+				int prefabWidth = prefab.getTiledWidth();
+				int prefabHeight = prefab.getTiledHeight();
 				
 				for(int c=0;c<prefabWidth;c++)
 					for(int l=0;l<prefabHeight;l++){
@@ -398,26 +449,72 @@ public class Workspace extends JPanel{
 					if(activeTile.x+prefabWidth>level.getWidth()-defaultColInsertValue)
 						addLevelCols((activeTile.x+prefabWidth)-(level.getWidth()-defaultColInsertValue));
 					//Insert new object to the level
-					level.getObjects().add(new GameObject(Globals.toolBox.insertionTool.getPrefab(),activeTile.x,activeTile.y));
+					GameObject gameObject = new GameObject(prefab,activeTile.x,activeTile.y);
+					level.getObjects().add(gameObject);
 					updateLevelImage();
 					repaint();
+					if(prefab.isComplex()){
+						//get next prefab in the sequence
+						Prefab linkedPrefab = null;
+						if(prefab.isMaster())
+							linkedPrefab = prefab.getSlavePrefab();
+						else if(prefab.isSlave())
+							linkedPrefab = prefab.getMasterPrefab();
+						
+						if(Globals.toolBox.insertionTool.hasMasterObject()){
+							//if current object was the last in the sequence "master-slave"
+							//set relations between game objects 
+							Globals.toolBox.insertionTool.getMasterObject().setSlave(gameObject);
+							
+							//invoke usual insertion tool without link to a master
+							Globals.toolBox.insertionTool.invoke(linkedPrefab);
+							}
+						else
+							Globals.toolBox.insertionTool.invoke(linkedPrefab,gameObject);
+						resizedTile=resizeImage(linkedPrefab.getTexture(),scaleFactor);
+						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(linkedPrefab);
+					}
 				}
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON2){
 				ConstructorWindow.instance.toolsPanel.workspaceScaleJS.setValue(100);
 			}
 			if(arg0.getButton()==MouseEvent.BUTTON3){
+				int index = indexMap[activeTile.x][activeTile.y];
+				//if insertion tool active, right click deactivates it
 				if(Globals.toolBox.insertionTool.isActive()){
+					//remove master object without a slave
+					if(Globals.toolBox.insertionTool.hasMasterObject()){
+						level.getObjects().remove(Globals.toolBox.insertionTool.getMasterObject());
+						updateLevelImage();
+						}
 					Globals.toolBox.insertionTool.disable();
 					ConstructorWindow.instance.collectionsPanel.tilesTab.removeSelection();
 					resizedTile=null;
+					if(index!=-1){
+						Prefab prefab = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab();
+						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
+					}
 				}
 				else
-					if(indexMap[activeTile.x][activeTile.y]!=-1){
+					//if insertion tool isn't active, right click deletes object under the pointer
+					if(index!=-1){
 						//deleting the object from level and indexMap 
-						level.getObjects().remove(indexMap[activeTile.x][activeTile.y]);
+						GameObject selectedObject = level.getObjects().get(index);
+						if(selectedObject.isComplex()){
+							GameObject linkedObject = null;
+							if(selectedObject.isMaster())
+								linkedObject = selectedObject.getSlave();
+							else if(selectedObject.isSlave())
+								linkedObject = selectedObject.getMaster();
+							level.getObjects().remove(selectedObject);
+							level.getObjects().remove(linkedObject);
+						}
+						else
+							level.getObjects().remove(index);
 						
-						//getting the last non-empty index
+						
+						//getting the last non-empty index and resizing the level
 						for(int c=level.getWidth()-1;c>=0;c--){
 							boolean indexFound = false;
 							for(int l=0;l<level.getHeight();l++)
@@ -449,7 +546,7 @@ public class Workspace extends JPanel{
 				activeTile.setLocation(tile);
 				int index = indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)];
 				//if tile is not empty
-				if(index!=-1){
+				if(index!=-1&&!Globals.toolBox.insertionTool.isActive()){
 					Prefab prefab = level.getObjects().get(index).getPrefab();
 					ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
 				}

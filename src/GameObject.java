@@ -9,6 +9,14 @@ public class GameObject{
 	
 	private int line;
 	
+	private int index;
+	
+	//in workspace, after setting the position of current, "master" prefab, user must set of the slave prefab
+	private GameObject slaveObject;
+			
+	//prefab, to which current prefab is linked to
+	private GameObject masterObject;
+	
 	public GameObject(Prefab prefab, int column, int line){
 		this.prefab=prefab;
 		this.column=column;
@@ -44,5 +52,26 @@ public class GameObject{
 		this.column = point.x;
 		this.line = point.y;
 	}
+	
+	public int getIndex(){return index;}
+	
+	public void setIndex(int index){ this.index = index; }
 
+	public GameObject getSlave(){return this.slaveObject;}
+	
+	public GameObject getMaster(){return this.masterObject;}
+	
+	public void setMaster(GameObject masterObject){ this.masterObject = masterObject;}
+	
+	public boolean isComplex(){return isMaster()||isSlave();}
+	
+	public boolean isMaster(){return slaveObject!=null;}
+	
+	public boolean isSlave(){return masterObject!=null;}
+	
+	public void setSlave(GameObject gameObject){
+		gameObject.setMaster(this);
+		this.slaveObject = gameObject;
+		}
+	
 }

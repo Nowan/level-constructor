@@ -25,6 +25,12 @@ public class Prefab {
 		
 		private String desctiption;
 		
+		//in workspace, after setting the position of current, "master" prefab, user must set of the slave prefab
+		private Prefab slavePrefab;
+		
+		//prefab, to which current prefab is linked to
+		private Prefab masterPrefab;
+		
 		public Prefab(String ID, String categoryID, int tiledWidth, int tiledHeight, 
 				String prefabTexture, String description, ArrayList<AdditiveAttribute> additiveAttributes){
 			this.setPrefabID(ID);  
@@ -103,5 +109,23 @@ public class Prefab {
 		public void setAdditiveAttributes(ArrayList<AdditiveAttribute> additiveAttributes) {
 			this.additiveAttributes = additiveAttributes;
 		}
-
+		
+		public boolean isComplex(){return isMaster()||isSlave();}
+		
+		public boolean isMaster(){return slavePrefab!=null;}
+		
+		public boolean isSlave(){return masterPrefab!=null;}
+		
+		public void setSlavePrefab(Prefab targetPrefab){
+			this.slavePrefab = targetPrefab;
+			targetPrefab.setMasterPrefab(this);
+			}
+		
+		public Prefab getSlavePrefab(){return this.slavePrefab;}
+		
+		public Prefab getMasterPrefab(){return this.masterPrefab;}
+		
+		public void setMasterPrefab(Prefab masterPrefab){this.masterPrefab = masterPrefab;}
+		
+		public void removeSlave(){ slavePrefab.setMasterPrefab(null); this.slavePrefab = null; }
 }
