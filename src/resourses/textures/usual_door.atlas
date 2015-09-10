@@ -6,15 +6,15 @@ filter: Nearest,Nearest
 repeat: none
 udr-01
   rotate: false
-  xy: 2, 2
-  size: 253, 363
-  orig: 253, 363
+  xy: 257, 24
+  size: 189, 341
+  orig: 189, 341
   offset: 0, 0
   index: -1
 udr-02
   rotate: false
-  xy: 257, 24
-  size: 189, 341
-  orig: 189, 341
+  xy: 2, 2
+  size: 253, 363
+  orig: 253, 363
   offset: 0, 0
   index: -1

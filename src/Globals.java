@@ -19,9 +19,9 @@ public class Globals {
 	//Level data
 	public Level level;
 	
-	public static final String TEXTURES_FOLDER="bin/resourses/textures/raw/";
+	public static final String TEXTURES_FOLDER="src/resourses/textures/raw/";
 	
-	public static final String ATLASES_FOLDER="bin/resourses/textures/";
+	public static final String ATLASES_FOLDER="src/resourses/textures/";
 	
-	public static final String LEVELS_FOLDER="bin/levels/";
+	public static final String LEVELS_FOLDER="src/levels/";
 }

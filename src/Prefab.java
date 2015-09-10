@@ -114,12 +114,18 @@ public class Prefab {
 		
 		public boolean isMaster(){return slavePrefab!=null;}
 		
+		//If relation is complicated, true means that this is the first prefab in sequence master-slave
+		//Master->slave/master->slave/master->slave
+		public boolean isRelationStart(){return isMaster()&&!isSlave(); }
+		
+		//If relation is complicated, true means that this is the last prefab of whole relation
+		public boolean isRelationEnd(){return isSlave()&&!isMaster(); }
+		
 		public boolean isSlave(){return masterPrefab!=null;}
 		
-		public void setSlavePrefab(Prefab targetPrefab){
-			this.slavePrefab = targetPrefab;
-			targetPrefab.setMasterPrefab(this);
-			}
+		public void setSlavePrefab(Prefab slavePrefab){
+			this.slavePrefab = slavePrefab;
+		}
 		
 		public Prefab getSlavePrefab(){return this.slavePrefab;}
 		

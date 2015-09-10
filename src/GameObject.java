@@ -72,6 +72,6 @@ public class GameObject{
 	public void setSlave(GameObject gameObject){
 		gameObject.setMaster(this);
 		this.slaveObject = gameObject;
-		}
+	}
 	
 }

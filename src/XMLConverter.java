@@ -15,9 +15,9 @@ import org.w3c.dom.NodeList;
 
 public class XMLConverter {
 	
-	private static final String PREFAB_BASE_ADDRESS = "bin/resourses/prefabsbase.xml";
+	private static final String PREFAB_BASE_ADDRESS = "src/resourses/prefabsbase.xml";
 	
-	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "bin/resourses/prefabcategorybase.xml";
+	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "src/resourses/prefabcategorybase.xml";
 	
 	private File fXmlFile;
 	private DocumentBuilderFactory dbFactory;

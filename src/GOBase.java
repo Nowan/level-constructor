@@ -27,8 +27,10 @@ public class GOBase{
 			for(Prefab p : xmlConverter.loadPrefabBase())
 				this.add(p);
 			for(Prefab p : this)
-				if(p.getPrefabID().equals("udr_01"))
+				if(p.getPrefabID().equals("udr_01")){
 					p.setSlavePrefab(this.get("udr_02"));
+					this.get("udr_02").setMasterPrefab(p);
+					}
 		}
 		
 		//refresh the list

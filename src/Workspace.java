@@ -418,8 +418,10 @@ public class Workspace extends JPanel{
 			int index = indexMap[Math.min(activeTile.x, level.getWidth()-1)][Math.min(activeTile.y, level.getHeight()-1)];
 			if(index!=-1)
 				ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(level.getObjects().get(index).getPrefab());
-			if(Globals.toolBox.insertionTool.isActive())
+			if(Globals.toolBox.insertionTool.isActive()){
+				ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(Globals.toolBox.insertionTool.getPrefab());
 				resizedTile=resizeImage(Globals.toolBox.insertionTool.getPrefab().getTexture(),scaleFactor);
+				}
 			repaint();
 		}
 
@@ -492,7 +494,7 @@ public class Workspace extends JPanel{
 					ConstructorWindow.instance.collectionsPanel.tilesTab.removeSelection();
 					resizedTile=null;
 					if(index!=-1){
-						Prefab prefab = level.getObjects().get(indexMap[activeTile.x][activeTile.y]).getPrefab();
+						Prefab prefab = level.getObjects().get(index).getPrefab();
 						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(prefab);
 					}
 				}

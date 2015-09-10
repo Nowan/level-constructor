@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -56,7 +57,12 @@ public class GOManagerWindow extends JDialog{
 	private JTextField indexJTF;
 	private JButton editJB;
 	private JButton deleteJB;
+	
+	private JPanel relationJP;
 	private JLabel selectedItemsJL;
+	private DefaultComboBoxModel<String> selectedPrefabModel;
+	JComboBox<String> masterJCB;
+	private JButton linkJB;
 	
 	private PreviewPanel displayPrefabJP;
 	
@@ -103,7 +109,6 @@ public class GOManagerWindow extends JDialog{
 		for(Prefab p : GOBase.prefabsBase)
 			listModel.addElement(p.getPrefabID());
 		prefabsList = new JList<String>(listModel);
-		//prefabsList.setSelectedIndex(0);
 		prefabsList.addMouseListener(new MouseListener(){
 			@Override public void mouseClicked(MouseEvent arg0) {}
 
@@ -148,7 +153,7 @@ public class GOManagerWindow extends JDialog{
 		prefabsScrollPane.setPreferredSize(new Dimension(180, 448));
 		prefabsScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
-		//Generating panel of chosen prefab parameters
+		//Generating panel, which will display prefab parameters
 		prefabParametersJP = new JPanel();
 		prefabParametersJP.setPreferredSize(new Dimension(this.getWidth()-185,448));
 		prefabParametersJP.setBorder(BorderFactory.createBevelBorder(1));
@@ -186,9 +191,60 @@ public class GOManagerWindow extends JDialog{
 			}
 		});
 		
-		selectedItemsJL = new JLabel("Selected items");
-		selectedItemsJL.setFont(Globals.DEFAULT_FONT);
+		//Generating panel, which will enable prefab grouping
+		//It will be displayed only when more than one prefab is selected
+		//(that's it, because it will group only the selected objects)
+		relationJP = new JPanel();
+		relationJP.setPreferredSize(new Dimension(228,120));
+		relationJP.setBorder(BorderFactory.createEtchedBorder());
+		SpringLayout relationSL = new SpringLayout();
+		relationJP.setLayout(relationSL);
 		
+		selectedItemsJL = new JLabel("N items selected");
+		//selectedItemsJL.setFont(Globals.PARAMETER_FONT);
+		
+		JLabel masterJL = new JLabel("Master: ");
+		masterJL.setFont(Globals.DEFAULT_FONT);
+		
+		selectedPrefabModel = new DefaultComboBoxModel<String>();
+		masterJCB = new JComboBox<String>(selectedPrefabModel);
+		masterJCB.setPreferredSize(new Dimension(150,20));
+		masterJCB.setFont(Globals.DEFAULT_FONT);
+		
+		linkJB = new JButton("Link");
+		linkJB.setPreferredSize(new Dimension(221,60));
+		linkJB.setFont(Globals.INDEX_FONT);
+		linkJB.setContentAreaFilled(false);
+		linkJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				onLinkClicked();
+			}
+		});
+		
+		relationSL.putConstraint(SpringLayout.NORTH, selectedItemsJL, 
+				6,SpringLayout.NORTH, relationJP);
+		relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, selectedItemsJL, 
+				0,SpringLayout.HORIZONTAL_CENTER, relationJP);
+		relationJP.add(selectedItemsJL);
+		
+		relationSL.putConstraint(SpringLayout.NORTH, masterJL, 
+				30,SpringLayout.NORTH, relationJP);
+		relationSL.putConstraint(SpringLayout.WEST, masterJL, 
+				12,SpringLayout.WEST, relationJP);
+		relationJP.add(masterJL);
+		
+		relationSL.putConstraint(SpringLayout.VERTICAL_CENTER, masterJCB, 
+				0,SpringLayout.VERTICAL_CENTER, masterJL);
+		relationSL.putConstraint(SpringLayout.WEST, masterJCB, 
+				0,SpringLayout.EAST, masterJL);
+		relationJP.add(masterJCB);
+		
+		relationSL.putConstraint(SpringLayout.SOUTH, linkJB, 
+				-2,SpringLayout.SOUTH, relationJP);
+		relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, linkJB, 
+				0,SpringLayout.HORIZONTAL_CENTER, relationJP);
+		relationJP.add(linkJB);
 		//adding components to the panel
 		
 		prefabParametersJP.add(indexJTF);
@@ -204,7 +260,13 @@ public class GOManagerWindow extends JDialog{
 				0,SpringLayout.EAST, displayPrefabJP);
 		prefabParametersJP.add(editJB);
 		
-		prefabParametersJP.add(selectedItemsJL);
+		//prefabParametersJP.add(selectedItemsJL);
+		
+		slayout2.putConstraint(SpringLayout.VERTICAL_CENTER, relationJP, 
+				-20, SpringLayout.VERTICAL_CENTER, prefabParametersJP);
+		slayout2.putConstraint(SpringLayout.HORIZONTAL_CENTER, relationJP, 
+				0, SpringLayout.HORIZONTAL_CENTER, prefabParametersJP);
+		prefabParametersJP.add(relationJP);
 		
 		//Adding components to the main panel, positioning them in relation to each other  
 		panel.add(prefabsScrollPane);
@@ -306,15 +368,35 @@ public class GOManagerWindow extends JDialog{
 		if(multiplySelection){
 			for(Component c : prefabParametersJP.getComponents())
 				c.setVisible(false);
-			selectedItemsJL.setVisible(true);
-			selectedItemsJL.setText("Selected "+prefabsList.getSelectedIndices().length+" items");
+			relationJP.setVisible(true);
+			for(Component c : relationJP.getComponents())
+				c.setVisible(true);
+			selectedItemsJL.setText(prefabsList.getSelectedIndices().length+" prefabs selected");
+			selectedPrefabModel.removeAllElements();
+			int linkedPrefabsCount = 0;
+			for(String s : prefabsList.getSelectedValuesList()){
+				selectedPrefabModel.addElement(s);
+				if(GOBase.prefabsBase.get(s).isComplex())
+					linkedPrefabsCount++;
+			}
+			if(linkedPrefabsCount==selectedPrefabModel.getSize()){
+				masterJCB.setEnabled(false);
+				linkJB.setText("Unlink");
+				
+			}
+			else{
+				masterJCB.setEnabled(true);
+				linkJB.setText("Link");
+			}
 		}
 		else{
 			for(Component c : prefabParametersJP.getComponents())
 				c.setVisible(true);
-			selectedItemsJL.setVisible(false);
+			relationJP.setVisible(false);
+			for(Component c : relationJP.getComponents())
+				c.setVisible(false);
 			if(!prefabsList.isSelectionEmpty()){
-			String selectedID = prefabsList.getSelectedValue().toString();
+				String selectedID = prefabsList.getSelectedValue().toString();
 			if(currentlyShowedPrefab!=null && selectedID!=currentlyShowedPrefab.getPrefabID())
 				showPrefabAttributes(selectedID);
 			if(!deleteJB.isEnabled())deleteJB.setEnabled(true);
@@ -322,6 +404,37 @@ public class GOManagerWindow extends JDialog{
 			}
 			else
 				showPrefabAttributes(null);
+			
+		}
+	}
+	
+	private void onLinkClicked(){
+		if(linkJB.getText().equals("Link")){
+			//Starting from master element
+			Prefab masterPrefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
+			for(int i=0; i<masterJCB.getItemCount();i++)
+				if(i!=masterJCB.getSelectedIndex()){
+					Prefab slavePrefab = GOBase.prefabsBase.get(masterJCB.getItemAt(i));
+					masterPrefab.setSlavePrefab(slavePrefab);
+					slavePrefab.setMasterPrefab(masterPrefab);
+					masterPrefab = slavePrefab;
+				}
+			
+			linkJB.setText("Unlink");
+			masterJCB.setEnabled(false);
+		}
+		else if(linkJB.getText().equals("Unlink")){
+			//Starting from master element
+			Prefab prefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
+			//moving to the slave elements and "setting them free" from their masters
+			while(prefab.isComplex()){
+				prefab = prefab.getSlavePrefab();
+				prefab.getMasterPrefab().setSlavePrefab(null);
+				prefab.setMasterPrefab(null);
+			}
+			
+			linkJB.setText("Link");
+			masterJCB.setEnabled(true);
 		}
 	}
 	
