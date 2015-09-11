@@ -10,6 +10,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
@@ -157,6 +158,20 @@ public class Workspace extends JPanel{
 		public void removeLevelRow(boolean onFirstPosition){
 			if(level.getHeight()-1<level.getDefaultHeight())
 				return;
+			//checking, whether the selected row is empty
+			int rowIndex = onFirstPosition ? 0 : level.getHeight()-1;
+			boolean rowEmpty = true;
+			for(int c=0;c<level.getWidth();c++)
+				if(indexMap[c][rowIndex]!=-1)
+					rowEmpty = false;
+			if(!rowEmpty){
+				int n = JOptionPane.showConfirmDialog(
+					  	ConstructorWindow.instance,
+					    "This row is not empty. All objects in this row will be removed\nAre you sure you want to continue?",
+					    "Message",
+					    JOptionPane.YES_NO_OPTION);
+				if(n!=0) return;
+			}
 			//saving indexMap before resizing
 			int [][] indexMapBackup=new int [level.getWidth()][level.getHeight()-1];
 			for(int c=0;c<level.getWidth();c++)
@@ -180,8 +195,18 @@ public class Workspace extends JPanel{
 			ArrayList<GameObject> objectsToRemove = new ArrayList<GameObject>();
 			if(onFirstPosition){
 				for(GameObject go : level.getObjects())
-					if(go.getPosition().getY()==0)
-						objectsToRemove.add(go);
+					if(go.getPosition().getY()==0){
+						if(go.isComplex()){
+							GameObject gameObject = go.getRelationMaster();
+							while(gameObject!=null){
+								GameObject slaveObject = gameObject.getSlave();
+								objectsToRemove.add(gameObject);
+								gameObject = slaveObject;
+							}
+						}
+						else
+							objectsToRemove.add(go);
+						}
 					else
 						go.setPosition(go.getPosition().x, go.getPosition().y-1);
 			}
@@ -545,7 +570,7 @@ public class Workspace extends JPanel{
 								GameObject slaveObject = gameObject.getSlave();
 								level.getObjects().remove(gameObject);
 								gameObject = slaveObject;
-								}
+							}
 						}
 						else
 							level.getObjects().remove(index);
