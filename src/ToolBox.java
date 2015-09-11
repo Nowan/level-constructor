@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class ToolBox {
 	
 	public InsertionTool insertionTool;
@@ -13,27 +15,28 @@ public class ToolBox {
 		
 		//if the "slave" prefab is currently selected, this object is used to track the position
 		//of "master", to which the new game object will be attached
-		private GameObject masterGameObject;
+		public ArrayList<GameObject> relationObjects;
 	
 		private InsertionTool(){
+			relationObjects = new ArrayList<GameObject>();
 			active = false;
 		}
 	
 		public void invoke(Prefab prefab){
-			masterGameObject=null;
+			relationObjects.clear();
 			this.prefab = prefab;
 			active = true;
 		}
 		
 		public void invoke(Prefab prefab, GameObject masterObject){
 			this.prefab = prefab;
-			this.masterGameObject=masterObject;
+			relationObjects.add(masterObject);
 			active = true;
 		}
 	
 		public void disable(){
 			prefab = null;
-			masterGameObject=null;
+			relationObjects.clear();
 			active = false;
 		}
 	
@@ -42,15 +45,15 @@ public class ToolBox {
 		}
 		
 		public GameObject getMasterObject(){
-			return masterGameObject;
+			return relationObjects.get(relationObjects.size()-1);
 		}
 		
 		public boolean hasMasterObject(){
-			return masterGameObject!=null;
+			return relationObjects.size()!=0;
 		}
 		
 		public boolean hasMasterObject(GameObject object){
-			return hasMasterObject()&&masterGameObject==object;
+			return hasMasterObject()&&relationObjects.get(relationObjects.size()-1)==object;
 		}
 		
 		public boolean isActive(){

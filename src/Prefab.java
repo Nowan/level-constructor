@@ -114,14 +114,18 @@ public class Prefab {
 		
 		public boolean isMaster(){return slavePrefab!=null;}
 		
+		public boolean isSlave(){return masterPrefab!=null;}
+		
+		public boolean isMaster(Prefab prefab){return slavePrefab==prefab;}
+		
+		public boolean isSlave(Prefab prefab){return masterPrefab==prefab;}
+		
 		//If relation is complicated, true means that this is the first prefab in sequence master-slave
 		//Master->slave/master->slave/master->slave
 		public boolean isRelationStart(){return isMaster()&&!isSlave(); }
 		
 		//If relation is complicated, true means that this is the last prefab of whole relation
 		public boolean isRelationEnd(){return isSlave()&&!isMaster(); }
-		
-		public boolean isSlave(){return masterPrefab!=null;}
 		
 		public void setSlavePrefab(Prefab slavePrefab){
 			this.slavePrefab = slavePrefab;
@@ -131,7 +135,31 @@ public class Prefab {
 		
 		public Prefab getMasterPrefab(){return this.masterPrefab;}
 		
+		//returns the first master of relation
+		public Prefab getRelationMaster(){
+			Prefab prefab = this;
+			while(!prefab.isRelationStart())
+				prefab = prefab.getMasterPrefab();
+			return prefab;
+		}
+		
 		public void setMasterPrefab(Prefab masterPrefab){this.masterPrefab = masterPrefab;}
 		
 		public void removeSlave(){ slavePrefab.setMasterPrefab(null); this.slavePrefab = null; }
+		
+		public boolean isRelatedTo(Prefab relationPrefab){
+			Prefab prefab = this;
+			while(prefab!=null){
+				if(prefab==relationPrefab)
+					return true;
+				prefab = prefab.getMasterPrefab();
+			}
+			prefab = this;
+			while(prefab!=null){
+				if(prefab==relationPrefab)
+					return true;
+				prefab = prefab.getSlavePrefab();
+			}
+			return false;
+		}
 }

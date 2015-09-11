@@ -121,18 +121,47 @@ public class TilesTab extends JPanel{
 	
 	public void removeSelection(){
 		Globals.toolBox.insertionTool.disable();
-		selectedItem.setBorder(BorderFactory.createEmptyBorder());
+		if(selectedItem.prefab.isComplex()){
+			Prefab prefab = selectedItem.prefab.getRelationMaster();
+			while(prefab!=null){
+				for(int i=0;i<prefabsPane.getComponentCount();i++){
+					PrefabPreviewItem p = (PrefabPreviewItem)(prefabsPane.getComponent(i));
+					if(p.prefab == prefab){
+						p.setBorder(BorderFactory.createEmptyBorder());
+						p.repaint();
+					}
+				}
+				prefab = prefab.getSlavePrefab();
+			}
+		}
+		else
+			selectedItem.setBorder(BorderFactory.createEmptyBorder());
 		selectedItem = null;
 		showPrefabInfo(null);
 		//ConstructorWindow.instance.workspace.repaintLevel();
 	}
 	
 	public void selectItem(PrefabPreviewItem ppi){
-		ppi.setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
-		Globals.toolBox.insertionTool.invoke(ppi.prefab);
-		showPrefabInfo(ppi.prefab);
-		selectedItem = ppi;
-		ppi.repaint();
+		if(ppi.prefab.isComplex()){
+			Prefab prefab = ppi.prefab.getRelationMaster();
+			Globals.toolBox.insertionTool.invoke(prefab);
+			showPrefabInfo(ppi.prefab);
+			selectedItem = ppi;
+			for(int i=0;i<prefabsPane.getComponentCount();i++){
+				PrefabPreviewItem p = (PrefabPreviewItem)(prefabsPane.getComponent(i));
+				if(p.prefab.isRelatedTo(prefab)){
+					p.setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
+					p.repaint();
+				}
+			}
+		}
+		else{
+			ppi.setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
+			Globals.toolBox.insertionTool.invoke(ppi.prefab);
+			showPrefabInfo(ppi.prefab);
+			selectedItem = ppi;
+			ppi.repaint();
+		}
 	}
 	
 	public void showPrefabInfo(Prefab prefab){
@@ -210,7 +239,7 @@ public class TilesTab extends JPanel{
 			//when the filter is changed, prefabsPane generates new array TilePreviewItem which will suit the filter
 			//in this case, selected tile must be created with border and a link must change
 			
-			if(Globals.toolBox.insertionTool.isActive()&&this.prefab==Globals.toolBox.insertionTool.getPrefab()){
+			if(Globals.toolBox.insertionTool.isActive()&&this.prefab.isRelatedTo(Globals.toolBox.insertionTool.getPrefab())){
 				setBorder(BorderFactory.createLineBorder(Color.GREEN,3));
 				selectedItem=this;
 			}
@@ -240,14 +269,14 @@ public class TilesTab extends JPanel{
 		}
 		
 		public void onMouseOver(){
-			if(this.prefab!=Globals.toolBox.insertionTool.getPrefab())
+			if(!this.prefab.isRelatedTo(Globals.toolBox.insertionTool.getPrefab()))
 				this.setBorder(BorderFactory.createLineBorder(new Color(0,255,0)));
 			inspectorPanel.showInfo(prefab);
 			previewPanel.setImage(prefab.getTexture());
 		}
 		
 		public void onMouseOut(){
-			if(this.prefab!=Globals.toolBox.insertionTool.getPrefab())
+			if(!this.prefab.isRelatedTo(Globals.toolBox.insertionTool.getPrefab()))
 				this.setBorder(BorderFactory.createEmptyBorder());
 			if(Globals.toolBox.insertionTool.isActive())
 				showPrefabInfo(Globals.toolBox.insertionTool.getPrefab());
@@ -256,12 +285,11 @@ public class TilesTab extends JPanel{
 		}
 		
 		public void onMouseClick(){
-			if(this.prefab==Globals.toolBox.insertionTool.getPrefab()){
+			if(this.prefab.isRelatedTo(Globals.toolBox.insertionTool.getPrefab())){
 				removeSelection();
 				setBorder(BorderFactory.createLineBorder(Color.GREEN,1));
 				inspectorPanel.showInfo(prefab);
 				previewPanel.setImage(prefab.getTexture());
-				
 			}
 			else{
 				if(selectedItem!=null)

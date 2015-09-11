@@ -346,23 +346,53 @@ public class Workspace extends JPanel{
 				if(Globals.toolBox.insertionTool.isActive()){
 					Prefab prefab = Globals.toolBox.insertionTool.getPrefab();
 					g2d.drawImage(resizedTile, posX, posY, null);
-					//if selected prefab is linked, draw a pointer to master
+					//if selected prefab is linked, draw pointers to all elements
 					if(Globals.toolBox.insertionTool.hasMasterObject()){
-						GameObject masterObject= Globals.toolBox.insertionTool.getMasterObject();
-						int masterPositionX = masterObject.getPosition().x*scaledTileSize;
-						int masterPositionY = masterObject.getPosition().y*scaledTileSize;
-						int masterWidth = masterObject.getTiledWidth()*scaledTileSize;
-						int masterHeight = masterObject.getTiledHeight()*scaledTileSize;
-						g2d.drawRect(masterPositionX, masterPositionY, masterWidth, masterHeight);
-						g2d.drawRect(posX, posY, prefab.getTiledWidth()*scaledTileSize, prefab.getTiledHeight()*scaledTileSize);
+						int masterPositionX,masterPositionY,masterWidth,masterHeight;
+						int slavePositionX,slavePositionY,slaveWidth,slaveHeight;
+						//if relation consists of more than 1 element - draw the pointers to all of them
+						if(Globals.toolBox.insertionTool.relationObjects.size()>1)
+						for(int i=0; i< Globals.toolBox.insertionTool.relationObjects.size()-1;i++){
+							GameObject object1 = Globals.toolBox.insertionTool.relationObjects.get(i);
+							GameObject object2 = Globals.toolBox.insertionTool.relationObjects.get(i+1);
+							
+							masterPositionX = object1.getPosition().x*scaledTileSize;
+							masterPositionY = object1.getPosition().y*scaledTileSize;
+							masterWidth = object1.getTiledWidth()*scaledTileSize;
+							masterHeight = object1.getTiledHeight()*scaledTileSize;
+							slavePositionX = object2.getPosition().x*scaledTileSize;
+							slavePositionY = object2.getPosition().y*scaledTileSize;
+							slaveWidth = object2.getTiledWidth()*scaledTileSize;
+							slaveHeight = object2.getTiledHeight()*scaledTileSize;
+							g2d.drawRect(masterPositionX, masterPositionY, masterWidth, masterHeight);
+							g2d.drawRect(slavePositionX, slavePositionY, slaveWidth, slaveHeight);
+							g2d.setColor(Color.RED);
+							g2d.drawLine(masterPositionX+masterWidth/2, masterPositionY+masterHeight/2,
+									slavePositionX+slaveWidth/2,
+									slavePositionY+slaveHeight/2);
+							g2d.fillRect(masterPositionX+masterWidth/2-3, masterPositionY+masterHeight/2-3, 6, 6);
+							g2d.fillRect(slavePositionX+slaveWidth/2-3, slavePositionY+slaveHeight/2-3, 6, 6);
+							g2d.setColor(Color.BLACK);
+						}
 						
+						GameObject masterObject = Globals.toolBox.insertionTool.getMasterObject();
+						masterPositionX=masterObject.getPosition().x*scaledTileSize;
+						masterPositionY=masterObject.getPosition().y*scaledTileSize;
+						masterWidth=masterObject.getTiledWidth()*scaledTileSize;
+						masterHeight=masterObject.getTiledHeight()*scaledTileSize;
+						//finally draw the pointer to currently selected prefab
+						slavePositionX = posX;
+						slavePositionY = posY;
+						slaveWidth = prefab.getTiledWidth()*scaledTileSize;
+						slaveHeight = prefab.getTiledHeight()*scaledTileSize;
+						g2d.drawRect(masterPositionX, masterPositionY, masterWidth, masterHeight);
+						g2d.drawRect(slavePositionX, slavePositionY, slaveWidth, slaveHeight);
 						g2d.setColor(Color.RED);
 						g2d.drawLine(masterPositionX+masterWidth/2, masterPositionY+masterHeight/2,
-								posX+prefab.getTiledWidth()*scaledTileSize/2,
-								posY+prefab.getTiledHeight()*scaledTileSize/2);
+								slavePositionX+slaveWidth/2,
+								slavePositionY+slaveHeight/2);
 						g2d.fillRect(masterPositionX+masterWidth/2-3, masterPositionY+masterHeight/2-3, 6, 6);
-						g2d.fillRect(posX+prefab.getTiledWidth()*scaledTileSize/2-3, 
-								posY+prefab.getTiledHeight()*scaledTileSize/2-3, 6, 6);
+						g2d.fillRect(slavePositionX+slaveWidth/2-3, slavePositionY+slaveHeight/2-3, 6, 6);
 						g2d.setColor(Color.BLACK);
 					}
 					else
@@ -382,26 +412,33 @@ public class Workspace extends JPanel{
 							g2d.drawRect(mainTilePosition.x*scaledTileSize, mainTilePosition.y*scaledTileSize, width, height);
 						else{
 							//if this object has links, draw pointers to them
-							GameObject linkedObject = null;
-							if(currentObject.isMaster())
-								linkedObject=currentObject.getSlave();
-							else if(currentObject.isSlave())
-								linkedObject=currentObject.getMaster();
-							
-							Point masterPosition = new Point(linkedObject.getPosition().x*scaledTileSize,linkedObject.getPosition().y*scaledTileSize);
-							Point masterSize = new Point(linkedObject.getTiledWidth()*scaledTileSize,linkedObject.getTiledHeight()*scaledTileSize);
-							Point masterCenter = new Point(masterPosition.x+masterSize.x/2,masterPosition.y+masterSize.y/2);
-							Point mainPosition = new Point(mainTilePosition.x*scaledTileSize,mainTilePosition.y*scaledTileSize);
-							Point mainSize = new Point(currentObject.getTiledWidth()*scaledTileSize,currentObject.getTiledHeight()*scaledTileSize);
-							Point mainCenter = new Point(mainPosition.x+currentObject.getTiledWidth()*scaledTileSize/2,mainPosition.y+currentObject.getTiledHeight()*scaledTileSize/2);
-							g2d.drawRect(masterPosition.x, masterPosition.y, masterSize.x, masterSize.y);
-							g2d.drawRect(mainPosition.x, mainPosition.y, mainSize.x, mainSize.y);
-							
-							g2d.setColor(Color.RED);
-							g2d.drawLine(masterCenter.x, masterCenter.y, mainCenter.x,mainCenter.y);
-							g2d.fillRect(masterCenter.x-3, masterCenter.y-3, 6, 6);
-							g2d.fillRect(mainCenter.x-3, mainCenter.y-3, 6, 6);
-							g2d.setColor(Color.BLACK);
+							GameObject gameObject = currentObject.getRelationMaster();
+							int masterPositionX,masterPositionY,masterWidth,masterHeight;
+							int slavePositionX,slavePositionY,slaveWidth,slaveHeight;
+							while(!gameObject.isRelationEnd()){
+								GameObject object1 = gameObject;
+								GameObject object2 = gameObject.getSlave();
+								
+								masterPositionX = object1.getPosition().x*scaledTileSize;
+								masterPositionY = object1.getPosition().y*scaledTileSize;
+								masterWidth = object1.getTiledWidth()*scaledTileSize;
+								masterHeight = object1.getTiledHeight()*scaledTileSize;
+								slavePositionX = object2.getPosition().x*scaledTileSize;
+								slavePositionY = object2.getPosition().y*scaledTileSize;
+								slaveWidth = object2.getTiledWidth()*scaledTileSize;
+								slaveHeight = object2.getTiledHeight()*scaledTileSize;
+								g2d.drawRect(masterPositionX, masterPositionY, masterWidth, masterHeight);
+								g2d.drawRect(slavePositionX, slavePositionY, slaveWidth, slaveHeight);
+								g2d.setColor(Color.RED);
+								g2d.drawLine(masterPositionX+masterWidth/2, masterPositionY+masterHeight/2,
+										slavePositionX+slaveWidth/2,
+										slavePositionY+slaveHeight/2);
+								g2d.fillRect(masterPositionX+masterWidth/2-3, masterPositionY+masterHeight/2-3, 6, 6);
+								g2d.fillRect(slavePositionX+slaveWidth/2-3, slavePositionY+slaveHeight/2-3, 6, 6);
+								g2d.setColor(Color.BLACK);
+								
+								gameObject = gameObject.getSlave();
+							}
 						}
 					}
 					else
@@ -457,24 +494,22 @@ public class Workspace extends JPanel{
 					repaint();
 					if(prefab.isComplex()){
 						//get next prefab in the sequence
-						Prefab linkedPrefab = null;
-						if(prefab.isMaster())
-							linkedPrefab = prefab.getSlavePrefab();
-						else if(prefab.isSlave())
-							linkedPrefab = prefab.getMasterPrefab();
-						
-						if(Globals.toolBox.insertionTool.hasMasterObject()){
-							//if current object was the last in the sequence "master-slave"
-							//set relations between game objects 
-							Globals.toolBox.insertionTool.getMasterObject().setSlave(gameObject);
-							
-							//invoke usual insertion tool without link to a master
-							Globals.toolBox.insertionTool.invoke(linkedPrefab);
-							}
-						else
-							Globals.toolBox.insertionTool.invoke(linkedPrefab,gameObject);
-						resizedTile=resizeImage(linkedPrefab.getTexture(),scaleFactor);
-						ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(linkedPrefab);
+						Prefab slavePrefab = prefab.getSlavePrefab();
+						if(slavePrefab!=null){
+							if(Globals.toolBox.insertionTool.hasMasterObject())
+								Globals.toolBox.insertionTool.getMasterObject().setSlave(gameObject);
+							Globals.toolBox.insertionTool.invoke(slavePrefab, gameObject);
+							resizedTile=resizeImage(slavePrefab.getTexture(),scaleFactor);
+							ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(slavePrefab);
+						}
+						else{
+							if(Globals.toolBox.insertionTool.hasMasterObject())
+								Globals.toolBox.insertionTool.getMasterObject().setSlave(gameObject);
+							Prefab relationMaster = gameObject.getPrefab().getRelationMaster();
+							Globals.toolBox.insertionTool.invoke(relationMaster);
+							resizedTile=resizeImage(relationMaster.getTexture(),scaleFactor);
+							ConstructorWindow.instance.collectionsPanel.tilesTab.showPrefabInfo(relationMaster);
+						}
 					}
 				}
 			}
@@ -487,9 +522,10 @@ public class Workspace extends JPanel{
 				if(Globals.toolBox.insertionTool.isActive()){
 					//remove master object without a slave
 					if(Globals.toolBox.insertionTool.hasMasterObject()){
-						level.getObjects().remove(Globals.toolBox.insertionTool.getMasterObject());
+						for(GameObject go : Globals.toolBox.insertionTool.relationObjects)
+							level.getObjects().remove(go);
 						updateLevelImage();
-						}
+					}
 					Globals.toolBox.insertionTool.disable();
 					ConstructorWindow.instance.collectionsPanel.tilesTab.removeSelection();
 					resizedTile=null;
@@ -504,13 +540,12 @@ public class Workspace extends JPanel{
 						//deleting the object from level and indexMap 
 						GameObject selectedObject = level.getObjects().get(index);
 						if(selectedObject.isComplex()){
-							GameObject linkedObject = null;
-							if(selectedObject.isMaster())
-								linkedObject = selectedObject.getSlave();
-							else if(selectedObject.isSlave())
-								linkedObject = selectedObject.getMaster();
-							level.getObjects().remove(selectedObject);
-							level.getObjects().remove(linkedObject);
+							GameObject gameObject = selectedObject.getRelationMaster();
+							while(gameObject!=null){
+								GameObject slaveObject = gameObject.getSlave();
+								level.getObjects().remove(gameObject);
+								gameObject = slaveObject;
+								}
 						}
 						else
 							level.getObjects().remove(index);

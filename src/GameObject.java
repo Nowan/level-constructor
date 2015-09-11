@@ -63,6 +63,10 @@ public class GameObject{
 	
 	public void setMaster(GameObject masterObject){ this.masterObject = masterObject;}
 	
+	public boolean isRelationStart(){return isMaster()&&!isSlave(); }
+	
+	public boolean isRelationEnd(){return isSlave()&&!isMaster(); }
+	
 	public boolean isComplex(){return isMaster()||isSlave();}
 	
 	public boolean isMaster(){return slaveObject!=null;}
@@ -72,6 +76,14 @@ public class GameObject{
 	public void setSlave(GameObject gameObject){
 		gameObject.setMaster(this);
 		this.slaveObject = gameObject;
+	}
+	
+	//returns the first master of relation
+	public GameObject getRelationMaster(){
+		GameObject gameObject = this;
+		while(!gameObject.isRelationStart())
+			gameObject = gameObject.getMaster();
+		return gameObject;
 	}
 	
 }

@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -58,11 +59,7 @@ public class GOManagerWindow extends JDialog{
 	private JButton editJB;
 	private JButton deleteJB;
 	
-	private JPanel relationJP;
-	private JLabel selectedItemsJL;
-	private DefaultComboBoxModel<String> selectedPrefabModel;
-	JComboBox<String> masterJCB;
-	private JButton linkJB;
+	private ArrayList<RelationPanel> relationPanels;
 	
 	private PreviewPanel displayPrefabJP;
 	
@@ -191,60 +188,8 @@ public class GOManagerWindow extends JDialog{
 			}
 		});
 		
-		//Generating panel, which will enable prefab grouping
-		//It will be displayed only when more than one prefab is selected
-		//(that's it, because it will group only the selected objects)
-		relationJP = new JPanel();
-		relationJP.setPreferredSize(new Dimension(228,120));
-		relationJP.setBorder(BorderFactory.createEtchedBorder());
-		SpringLayout relationSL = new SpringLayout();
-		relationJP.setLayout(relationSL);
+		relationPanels = new ArrayList<RelationPanel>();
 		
-		selectedItemsJL = new JLabel("N items selected");
-		//selectedItemsJL.setFont(Globals.PARAMETER_FONT);
-		
-		JLabel masterJL = new JLabel("Master: ");
-		masterJL.setFont(Globals.DEFAULT_FONT);
-		
-		selectedPrefabModel = new DefaultComboBoxModel<String>();
-		masterJCB = new JComboBox<String>(selectedPrefabModel);
-		masterJCB.setPreferredSize(new Dimension(150,20));
-		masterJCB.setFont(Globals.DEFAULT_FONT);
-		
-		linkJB = new JButton("Link");
-		linkJB.setPreferredSize(new Dimension(221,60));
-		linkJB.setFont(Globals.INDEX_FONT);
-		linkJB.setContentAreaFilled(false);
-		linkJB.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				onLinkClicked();
-			}
-		});
-		
-		relationSL.putConstraint(SpringLayout.NORTH, selectedItemsJL, 
-				6,SpringLayout.NORTH, relationJP);
-		relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, selectedItemsJL, 
-				0,SpringLayout.HORIZONTAL_CENTER, relationJP);
-		relationJP.add(selectedItemsJL);
-		
-		relationSL.putConstraint(SpringLayout.NORTH, masterJL, 
-				30,SpringLayout.NORTH, relationJP);
-		relationSL.putConstraint(SpringLayout.WEST, masterJL, 
-				12,SpringLayout.WEST, relationJP);
-		relationJP.add(masterJL);
-		
-		relationSL.putConstraint(SpringLayout.VERTICAL_CENTER, masterJCB, 
-				0,SpringLayout.VERTICAL_CENTER, masterJL);
-		relationSL.putConstraint(SpringLayout.WEST, masterJCB, 
-				0,SpringLayout.EAST, masterJL);
-		relationJP.add(masterJCB);
-		
-		relationSL.putConstraint(SpringLayout.SOUTH, linkJB, 
-				-2,SpringLayout.SOUTH, relationJP);
-		relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, linkJB, 
-				0,SpringLayout.HORIZONTAL_CENTER, relationJP);
-		relationJP.add(linkJB);
 		//adding components to the panel
 		
 		prefabParametersJP.add(indexJTF);
@@ -261,12 +206,6 @@ public class GOManagerWindow extends JDialog{
 		prefabParametersJP.add(editJB);
 		
 		//prefabParametersJP.add(selectedItemsJL);
-		
-		slayout2.putConstraint(SpringLayout.VERTICAL_CENTER, relationJP, 
-				-20, SpringLayout.VERTICAL_CENTER, prefabParametersJP);
-		slayout2.putConstraint(SpringLayout.HORIZONTAL_CENTER, relationJP, 
-				0, SpringLayout.HORIZONTAL_CENTER, prefabParametersJP);
-		prefabParametersJP.add(relationJP);
 		
 		//Adding components to the main panel, positioning them in relation to each other  
 		panel.add(prefabsScrollPane);
@@ -366,35 +305,19 @@ public class GOManagerWindow extends JDialog{
 	private void setMultiplySelection(boolean state){
 		multiplySelection = state;
 		if(multiplySelection){
+			//Hiding prefab preview
 			for(Component c : prefabParametersJP.getComponents())
 				c.setVisible(false);
-			relationJP.setVisible(true);
-			for(Component c : relationJP.getComponents())
-				c.setVisible(true);
-			selectedItemsJL.setText(prefabsList.getSelectedIndices().length+" prefabs selected");
-			selectedPrefabModel.removeAllElements();
-			int linkedPrefabsCount = 0;
-			for(String s : prefabsList.getSelectedValuesList()){
-				selectedPrefabModel.addElement(s);
-				if(GOBase.prefabsBase.get(s).isComplex())
-					linkedPrefabsCount++;
-			}
-			if(linkedPrefabsCount==selectedPrefabModel.getSize()){
-				masterJCB.setEnabled(false);
-				linkJB.setText("Unlink");
-				
-			}
-			else{
-				masterJCB.setEnabled(true);
-				linkJB.setText("Link");
-			}
+		
+			generateRelations();
 		}
 		else{
+			for(RelationPanel rp : relationPanels)
+				for(Component c : rp.getComponents())
+					rp.remove(c);
+			relationPanels.clear();
 			for(Component c : prefabParametersJP.getComponents())
 				c.setVisible(true);
-			relationJP.setVisible(false);
-			for(Component c : relationJP.getComponents())
-				c.setVisible(false);
 			if(!prefabsList.isSelectionEmpty()){
 				String selectedID = prefabsList.getSelectedValue().toString();
 			if(currentlyShowedPrefab!=null && selectedID!=currentlyShowedPrefab.getPrefabID())
@@ -408,33 +331,57 @@ public class GOManagerWindow extends JDialog{
 		}
 	}
 	
-	private void onLinkClicked(){
-		if(linkJB.getText().equals("Link")){
-			//Starting from master element
-			Prefab masterPrefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
-			for(int i=0; i<masterJCB.getItemCount();i++)
-				if(i!=masterJCB.getSelectedIndex()){
-					Prefab slavePrefab = GOBase.prefabsBase.get(masterJCB.getItemAt(i));
-					masterPrefab.setSlavePrefab(slavePrefab);
-					slavePrefab.setMasterPrefab(masterPrefab);
-					masterPrefab = slavePrefab;
-				}
-			
-			linkJB.setText("Unlink");
-			masterJCB.setEnabled(false);
-		}
-		else if(linkJB.getText().equals("Unlink")){
-			//Starting from master element
-			Prefab prefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
-			//moving to the slave elements and "setting them free" from their masters
-			while(prefab.isComplex()){
-				prefab = prefab.getSlavePrefab();
-				prefab.getMasterPrefab().setSlavePrefab(null);
-				prefab.setMasterPrefab(null);
+	private void generateRelations(){
+		for(RelationPanel rp : relationPanels)
+			for(Component c : rp.getComponents())
+				rp.remove(c);
+		relationPanels.clear();
+		//Finding relations between selected items
+		int freePrefabsNumber = 0;
+		ArrayList<Prefab> relationMasters = new ArrayList<Prefab>();
+		for(String s : prefabsList.getSelectedValuesList()){
+			//Stage 1: get number of "free" prefabs
+			if(!GOBase.prefabsBase.get(s).isComplex())
+				freePrefabsNumber+=1;
+			else{
+			//Stage 2: if prefab is complex, save master of it's relation in array
+				Prefab prefab = GOBase.prefabsBase.get(s);
+				if(relationMasters.size()==0)
+					relationMasters.add(prefab.getRelationMaster());
+				else{
+					boolean insideList = false;
+					for(Prefab p : relationMasters)
+						if(prefab.getRelationMaster()==p)
+							insideList=true;
+					if(!insideList)
+						relationMasters.add(prefab);
+					}
 			}
+		}
+		
+		//Visualize relations
+		if(freePrefabsNumber>1)
+			relationPanels.add(new RelationPanel());
+		
+		for(int i=0; i<relationMasters.size();i++){
+			relationPanels.add(new RelationPanel(relationMasters.get(i)));
+			relationPanels.get(relationPanels.size()-1).selectedItemsJL.setText("Relation "+(i+1));
+		}
+		
+		SpringLayout slayout = (SpringLayout)prefabParametersJP.getLayout();
+		for(int i=0; i<relationPanels.size();i++){
+			RelationPanel relationPanel = relationPanels.get(i);
 			
-			linkJB.setText("Link");
-			masterJCB.setEnabled(true);
+			slayout.putConstraint(SpringLayout.HORIZONTAL_CENTER, relationPanel,
+					0, SpringLayout.HORIZONTAL_CENTER, prefabParametersJP);
+			if(i==0)
+				slayout.putConstraint(SpringLayout.NORTH, relationPanel,
+					5, SpringLayout.NORTH, prefabParametersJP);
+			else
+				slayout.putConstraint(SpringLayout.NORTH, relationPanel,
+						3, SpringLayout.SOUTH, relationPanels.get(i-1));
+			
+			prefabParametersJP.add(relationPanel);
 		}
 	}
 	
@@ -486,6 +433,134 @@ public class GOManagerWindow extends JDialog{
 				showPrefabAttributes((GOBase.prefabsBase.get(prefabsList.getSelectedValue().toString()).getPrefabID()));
 			}
 		}
+	}
+	
+	private class RelationPanel extends JPanel{
+
+		private static final long serialVersionUID = -7037322091305948201L;
+		
+		private JLabel selectedItemsJL;
+		private DefaultComboBoxModel<String> selectedPrefabModel;
+		private JComboBox<String> masterJCB;
+		private JButton linkJB;
+		
+		public RelationPanel(){
+			//Generating panel, which will enable prefab grouping
+			//It will be displayed only when more than one prefab is selected
+			//(that's it, because it will group only the selected objects)
+			super();
+			
+			generateComponents();
+			
+			selectedItemsJL.setText("Free elements");
+			for(String s : prefabsList.getSelectedValuesList())
+				if(!GOBase.prefabsBase.get(s).isComplex())
+					selectedPrefabModel.addElement(s);
+		}
+		
+		public RelationPanel(Prefab relationMaster){
+			super();
+			generateComponents();
+			
+			Prefab prefab = relationMaster;
+			while(!prefab.isRelationEnd()){
+				if(prefab == relationMaster){
+					selectedPrefabModel.addElement(relationMaster.getPrefabID());
+					selectedPrefabModel.setSelectedItem(relationMaster.getPrefabID());
+				}
+				prefab = prefab.getSlavePrefab();
+				selectedPrefabModel.addElement(prefab.getPrefabID());
+			}
+			
+			masterJCB.setEnabled(false);
+			linkJB.setText("Unlink");
+		}
+		
+		private void generateComponents(){
+			this.setPreferredSize(new Dimension(228,120));
+			this.setBorder(BorderFactory.createEtchedBorder());
+			SpringLayout relationSL = new SpringLayout();
+			this.setLayout(relationSL);
+			
+			selectedItemsJL = new JLabel("N items selected");
+			
+			JLabel masterJL = new JLabel("Master: ");
+			masterJL.setFont(Globals.DEFAULT_FONT);
+			
+			selectedPrefabModel = new DefaultComboBoxModel<String>();
+			masterJCB = new JComboBox<String>(selectedPrefabModel);
+			masterJCB.setPreferredSize(new Dimension(150,20));
+			masterJCB.setFont(Globals.DEFAULT_FONT);
+			
+			
+			linkJB = new JButton("Link");
+			linkJB.setPreferredSize(new Dimension(221,60));
+			linkJB.setFont(Globals.INDEX_FONT);
+			linkJB.setContentAreaFilled(false);
+			linkJB.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					onLinkClicked();
+				}
+			});
+			
+			relationSL.putConstraint(SpringLayout.NORTH, selectedItemsJL, 
+					6,SpringLayout.NORTH, this);
+			relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, selectedItemsJL, 
+					0,SpringLayout.HORIZONTAL_CENTER, this);
+			this.add(selectedItemsJL);
+			
+			relationSL.putConstraint(SpringLayout.NORTH, masterJL, 
+					30,SpringLayout.NORTH, this);
+			relationSL.putConstraint(SpringLayout.WEST, masterJL, 
+					12,SpringLayout.WEST, this);
+			this.add(masterJL);
+			
+			relationSL.putConstraint(SpringLayout.VERTICAL_CENTER, masterJCB, 
+					0,SpringLayout.VERTICAL_CENTER, masterJL);
+			relationSL.putConstraint(SpringLayout.WEST, masterJCB, 
+					0,SpringLayout.EAST, masterJL);
+			this.add(masterJCB);
+			
+			relationSL.putConstraint(SpringLayout.SOUTH, linkJB, 
+					-2,SpringLayout.SOUTH, this);
+			relationSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, linkJB, 
+					0,SpringLayout.HORIZONTAL_CENTER, this);
+			this.add(linkJB);
+		}
+		
+		private void onLinkClicked(){
+			if(linkJB.getText().equals("Link")){
+				//Starting from master element
+				Prefab masterPrefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
+				
+				for(int i=0; i<masterJCB.getItemCount();i++)
+					if(i!=masterJCB.getSelectedIndex()){
+						Prefab slavePrefab = GOBase.prefabsBase.get(masterJCB.getItemAt(i));
+						masterPrefab.setSlavePrefab(slavePrefab);
+						slavePrefab.setMasterPrefab(masterPrefab);
+						masterPrefab = slavePrefab;
+					}
+				
+				linkJB.setText("Unlink");
+				masterJCB.setEnabled(false);
+			}
+			else if(linkJB.getText().equals("Unlink")){
+				//Starting from master element
+				Prefab prefab = GOBase.prefabsBase.get(masterJCB.getSelectedItem().toString());
+				//moving to the slave elements and "setting them free" from their masters
+				while(prefab.isComplex()){
+					prefab = prefab.getSlavePrefab();
+					prefab.getMasterPrefab().setSlavePrefab(null);
+					prefab.setMasterPrefab(null);
+				}
+				for(Component c : prefabParametersJP.getComponents())
+					c.setVisible(false);
+			
+				generateRelations();
+			}
+		}
+		
 	}
 	
 }
