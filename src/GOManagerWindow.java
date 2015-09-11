@@ -559,6 +559,7 @@ public class GOManagerWindow extends JDialog{
 			
 				generateRelations();
 			}
+			xmlConverter.savePrefabBase();
 		}
 		
 	}
