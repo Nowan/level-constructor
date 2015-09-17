@@ -1,0 +1,27 @@
+
+ceiling.png
+size: 512,512
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+clg-01
+  rotate: false
+  xy: 2, 195
+  size: 386, 276
+  orig: 386, 276
+  offset: 0, 0
+  index: -1
+clg-02
+  rotate: false
+  xy: 2, 98
+  size: 384, 95
+  orig: 384, 95
+  offset: 0, 0
+  index: -1
+clg-03
+  rotate: false
+  xy: 2, 2
+  size: 284, 94
+  orig: 284, 94
+  offset: 0, 0
+  index: -1

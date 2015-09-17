@@ -40,9 +40,6 @@ public class AssetManagerWindow extends JDialog{
 	
 	private JComboBox<String> selectedAtlasJCB;
 	private JPanel previewsJP;
-	private PreviewPanel texturePreviewJP;
-	private JButton rebuildAtlasJB;
-	private JTextField textureAddressJTF;
 	
 	//true means that window was created from GOManager, which means user can add/remove assets from all categories
 	//false means that window was created from ParticleManager, which means user must select a texture from selected category
@@ -57,7 +54,7 @@ public class AssetManagerWindow extends JDialog{
 		super(ConstructorWindow.instance, "Asset manager");
 		//blocks access to the main window
 		this.setModal(true);
-		setSize(600,300);
+		setSize(760,450);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setResizable(false);
@@ -78,7 +75,7 @@ public class AssetManagerWindow extends JDialog{
 		super(ConstructorWindow.instance, "Asset manager");
 		//blocks access to the main window
 		this.setModal(true);
-		setSize(600,300);
+		setSize(600,350);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setResizable(false);
@@ -88,11 +85,6 @@ public class AssetManagerWindow extends JDialog{
 		if(selectedAtlasJCB.getItemCount()!=0)
 			selectedAtlasJCB.setSelectedItem(categoryName);
 		selectedAtlasJCB.setEnabled(false);
-		
-		fileChooser=new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
-		fileChooser.setFileFilter(filter);
-		chooseMode=true;
 		
 		setVisible(false);
 	}
@@ -106,26 +98,16 @@ public class AssetManagerWindow extends JDialog{
 		previewsJP = new JPanel();
 		previewsJP.setBackground(Color.BLACK);
 		previewsJP.setAutoscrolls(true);
-		previewsJP.setPreferredSize(new Dimension(400,panel.getPreferredSize().height));
+		previewsJP.setPreferredSize(new Dimension(100,600));
 		
 		JScrollPane previewsJSP = new JScrollPane(previewsJP);
-		previewsJSP.setPreferredSize(new Dimension(400,panel.getPreferredSize().height));
+		previewsJSP.setPreferredSize(new Dimension(180,398));
 		previewsJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		previewsJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		
-		JPanel optionsJP = new JPanel();
-		optionsJP.setPreferredSize(new Dimension(panel.getPreferredSize().width-previewsJSP.getPreferredSize().width-5,panel.getPreferredSize().height-30));
-		SpringLayout optionsSL = new SpringLayout();
-		optionsJP.setLayout(optionsSL);
-		
-		JLabel selectedAtlasJL = new JLabel("Selected atlas:");
-		selectedAtlasJL.setFont(Globals.PARAMETER_FONT);
-		selectedAtlasJL.setPreferredSize(new Dimension(optionsJP.getPreferredSize().width,15));
-		selectedAtlasJL.setHorizontalAlignment(JLabel.CENTER);
-		
+
 		selectedAtlasJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
 		selectedAtlasJCB.setFont(Globals.DEFAULT_FONT);
-		selectedAtlasJCB.setPreferredSize(new Dimension(optionsJP.getPreferredSize().width,20));
+		selectedAtlasJCB.setPreferredSize(new Dimension(previewsJSP.getPreferredSize().width,25));
 		selectedAtlasJCB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -133,75 +115,70 @@ public class AssetManagerWindow extends JDialog{
 			}
 		});
 		
-		JPanel addAssetJP = new JPanel();
-		addAssetJP.setPreferredSize(new Dimension(optionsJP.getPreferredSize().width,210));
-		addAssetJP.setBorder(BorderFactory.createTitledBorder("Add new asset"));
-		SpringLayout addAssetSL = new SpringLayout();
-		addAssetJP.setLayout(addAssetSL);
+		//setting up detailed asset preview
+		JPanel detailedPreviewJP = new JPanel();
+		detailedPreviewJP.setPreferredSize(new Dimension(400,getHeight()-27));
+		detailedPreviewJP.setBorder(BorderFactory.createEtchedBorder());
+		SpringLayout detailedPreviewSL = new SpringLayout();
+		detailedPreviewJP.setLayout(detailedPreviewSL);
 		
-		textureAddressJTF = new JTextField("choose texture...");
-		textureAddressJTF.setFont(Globals.DEFAULT_FONT);
-		textureAddressJTF.setEnabled(false);
-		textureAddressJTF.setPreferredSize(new Dimension(145,22));
+		PreviewPanel mainPreview = new PreviewPanel();
+		mainPreview.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-5,300));
 		
-		JButton textureAddressJB = new JButton("...");
-		textureAddressJB.setFont(Globals.PARAMETER_FONT);
-		textureAddressJB.setPreferredSize(new Dimension(40,22));
-		textureAddressJB.setContentAreaFilled(false);
-		textureAddressJB.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int returnValue = fileChooser.showOpenDialog(ConstructorWindow.instance);
-				if (returnValue == JFileChooser.APPROVE_OPTION) {
-			          File selectedFile = fileChooser.getSelectedFile();
-			          String fileAddress = selectedFile.getAbsolutePath();
-			          
-			          try{
-							BufferedImage texture = ImageIO.read(new File(fileAddress));
-							texturePreviewJP.setImage(texture);
-							textureAddressJTF.setText(fileAddress);
-							rebuildAtlasJB.setEnabled(true);
-						}
-						catch(IOException ex){
-							System.out.println(ex.getMessage());
-						}
-			    }
-			}
-		});
+		JPanel assetPartsJP = new JPanel();
+		assetPartsJP.setPreferredSize(new Dimension(600,100));
+		assetPartsJP.setBackground(Color.BLACK);
 		
-		texturePreviewJP = new PreviewPanel();
-		texturePreviewJP.setPreferredSize(new Dimension(185,145));
+		JScrollPane assetPartsJSP = new JScrollPane(assetPartsJP);
+		assetPartsJSP.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-4,120));
+		assetPartsJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+		assetPartsJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		
-		rebuildAtlasJB = new JButton("Rebuild atlas");
-		rebuildAtlasJB.setFont(Globals.PARAMETER_FONT);
-		rebuildAtlasJB.setPreferredSize(new Dimension(185,22));
+		detailedPreviewSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, mainPreview, 0, SpringLayout.HORIZONTAL_CENTER, detailedPreviewJP);
+		detailedPreviewJP.add(mainPreview);
+		
+		detailedPreviewSL.putConstraint(SpringLayout.NORTH, assetPartsJSP, 0, SpringLayout.SOUTH, mainPreview);
+		detailedPreviewSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, assetPartsJSP, 0, SpringLayout.HORIZONTAL_CENTER, detailedPreviewJP);
+		detailedPreviewJP.add(assetPartsJSP);
+		
+		JPanel lastSectionJP = new JPanel();
+		lastSectionJP.setPreferredSize(new Dimension(173,getHeight()-27));
+		SpringLayout lastSectionSL = new SpringLayout();
+		lastSectionJP.setLayout(lastSectionSL);
+		
+		JPanel atlasManagementJP = new JPanel();
+		atlasManagementJP.setPreferredSize(new Dimension(170,145));
+		atlasManagementJP.setBorder(BorderFactory.createTitledBorder("Atlas management"));
+		
+		JButton rebuildAtlasJB = new JButton("Rebuild atlas");
+		rebuildAtlasJB.setFont(Globals.DEFAULT_FONT);
+		rebuildAtlasJB.setPreferredSize(new Dimension(150,34));
 		rebuildAtlasJB.setContentAreaFilled(false);
-		rebuildAtlasJB.setEnabled(false);
-		rebuildAtlasJB.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				onRebuildAtlasClicked();
-			}
-		});
+		atlasManagementJP.add(rebuildAtlasJB);
 		
-		addAssetJP.add(textureAddressJTF);
-		addAssetSL.putConstraint(SpringLayout.WEST, textureAddressJB, 0, SpringLayout.EAST, textureAddressJTF);
-		addAssetJP.add(textureAddressJB);
-		addAssetSL.putConstraint(SpringLayout.NORTH, texturePreviewJP, 0, SpringLayout.SOUTH, textureAddressJTF);
-		addAssetJP.add(texturePreviewJP);
-		addAssetSL.putConstraint(SpringLayout.NORTH, rebuildAtlasJB, 0, SpringLayout.SOUTH, texturePreviewJP);
-		addAssetJP.add(rebuildAtlasJB);
+		JButton removeAtlasJB = new JButton("Remove atlas");
+		removeAtlasJB.setFont(Globals.DEFAULT_FONT);
+		removeAtlasJB.setPreferredSize(new Dimension(150,34));
+		removeAtlasJB.setContentAreaFilled(false);
+		atlasManagementJP.add(removeAtlasJB);
 		
-		optionsSL.putConstraint(SpringLayout.NORTH, selectedAtlasJL, 5, SpringLayout.NORTH, optionsJP);
-		optionsJP.add(selectedAtlasJL);
-		optionsSL.putConstraint(SpringLayout.NORTH, selectedAtlasJCB, 5, SpringLayout.SOUTH, selectedAtlasJL);
-		optionsJP.add(selectedAtlasJCB);
-		optionsSL.putConstraint(SpringLayout.SOUTH, addAssetJP, 0, SpringLayout.SOUTH, optionsJP);
-		optionsJP.add(addAssetJP);
+		JButton addAtlasJB = new JButton("Create new atlas");
+		addAtlasJB.setFont(Globals.DEFAULT_FONT);
+		addAtlasJB.setPreferredSize(new Dimension(150,34));
+		addAtlasJB.setContentAreaFilled(false);
+		atlasManagementJP.add(addAtlasJB);
 		
+		lastSectionSL.putConstraint(SpringLayout.NORTH, atlasManagementJP, 10, SpringLayout.NORTH, lastSectionJP);
+		lastSectionSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, atlasManagementJP, 0, SpringLayout.HORIZONTAL_CENTER, lastSectionJP);
+		lastSectionJP.add(atlasManagementJP);
+		
+		panel.add(selectedAtlasJCB);
+		slayout.putConstraint(SpringLayout.NORTH, previewsJSP, 0, SpringLayout.SOUTH, selectedAtlasJCB);
 		panel.add(previewsJSP);
-		slayout.putConstraint(SpringLayout.EAST, optionsJP, 0, SpringLayout.EAST, panel);
-		panel.add(optionsJP);
+		slayout.putConstraint(SpringLayout.WEST, detailedPreviewJP, 0, SpringLayout.EAST, previewsJSP);
+		panel.add(detailedPreviewJP);
+		slayout.putConstraint(SpringLayout.WEST, lastSectionJP, 0, SpringLayout.EAST, detailedPreviewJP);
+		panel.add(lastSectionJP);
 		
 		return panel;
 	}
@@ -216,52 +193,39 @@ public class AssetManagerWindow extends JDialog{
 		//checking the folder with textures
 		File dir = new File(Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString());
 		File[] directoryListing = dir.listFiles();
-		if (directoryListing != null) 
-			for (File child : directoryListing) {
-				if(child.getName().endsWith(".png"))
-					previewsJP.add(new AssetPreview(child));
-			}
-		previewsJP.revalidate();
-		previewsJP.repaint();
-	}
-	
-	private void onRebuildAtlasClicked(){
-		//copy texture image to the textures folder
-		String textureAddress = textureAddressJTF.getText();
-		
-		//generating texture name in form "categoryindex-number.png"
-		String categoryIndex=GOBase.prefabCategoryBase.get(selectedAtlasJCB.getSelectedItem().toString()).getID();
-		int lastIndex = 0;
-		File dir = new File(Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString());
-		File[] directoryListing = dir.listFiles();
+		int newHeight=0;
 		if (directoryListing != null) 
 			for (File child : directoryListing) {
 				if(child.getName().endsWith(".png")){
-					//System.out.println(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
-					int indx = Integer.valueOf(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
-					if(indx>lastIndex)
-						lastIndex=indx;
+					previewsJP.add(new AssetPreview(child));
+					newHeight+=AssetPreview.HEIGHT+15;
 				}
 			}
-		String generatedTextureName = categoryIndex+"-"+String.format("%02d", lastIndex+1);
 		
-		String textureAddress2 = Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString()+"/"+generatedTextureName+textureAddress.substring(textureAddress.lastIndexOf('.'));
-		
-		if(!textureAddress.equals(textureAddress2))
-			try{
-				Files.copy(Paths.get(textureAddress),Paths.get(textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+		JButton addAssetJB = new JButton("+");
+		addAssetJB.setFont(Globals.INDEX_FONT);
+		addAssetJB.setMargin(new Insets(0,0,0,0));
+		addAssetJB.setPreferredSize(new Dimension(60,60));
+		addAssetJB.setContentAreaFilled(false);
+		addAssetJB.setForeground(Color.WHITE);
+		addAssetJB.setToolTipText("Add new Asset");
+		addAssetJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				NewAssetDialog newAssetDialog = new NewAssetDialog(selectedAtlasJCB.getSelectedItem().toString());
+				boolean operationSuccess = newAssetDialog.showDialog();
+				if(operationSuccess){
+					rebuildAtlas();
+					onAtlasChanged();
+				}
 			}
-			catch(Exception ex){
-				System.out.println(ex.getMessage());
-			}
+		});
 		
-		rebuildAtlas();
-		
-		texturePreviewJP.hideImage();
-		textureAddressJTF.setText("choose texture...");
-		rebuildAtlasJB.setEnabled(false);
-		
-		onAtlasChanged();
+		newHeight+=addAssetJB.getPreferredSize().height+20;
+		previewsJP.add(addAssetJB);
+		previewsJP.setPreferredSize(new Dimension(100,newHeight));
+		previewsJP.revalidate();
+		previewsJP.repaint();
 	}
 	
 	private void rebuildAtlas(){
@@ -278,13 +242,16 @@ public class AssetManagerWindow extends JDialog{
 		private JButton removeJB;
 		private JButton chooseJB;
 		
+		public static final int WIDTH = 140;
+		public static final int HEIGHT = 120;
+		
 		private BufferedImage texture;
 		private String textureAddress;
 		private String textureName;
 		
 		public AssetPreview(File file){
 			super();
-			setPreferredSize(new Dimension(100,120));
+			setPreferredSize(new Dimension(WIDTH,HEIGHT));
 			setSize(getPreferredSize());
 			
 			try{
@@ -307,6 +274,7 @@ public class AssetManagerWindow extends JDialog{
 			removeJB.setFont(Globals.PARAMETER_FONT);
 			removeJB.setForeground(Color.WHITE);
 			removeJB.setBackground(Color.BLACK);
+			removeJB.setToolTipText("Delete Asset");
 			removeJB.setVisible(false);
 			removeJB.addMouseListener(this);
 			removeJB.addMouseListener(new MouseListener(){

@@ -210,11 +210,22 @@ public class Workspace extends JPanel{
 					else
 						go.setPosition(go.getPosition().x, go.getPosition().y-1);
 			}
-			else
-				for(GameObject go : level.getObjects())
-					if(go.getPosition().getY()+go.getTiledHeight()==level.getHeight()+1)
-						objectsToRemove.add(go);
-			
+			else{
+				for(GameObject go : level.getObjects()){
+					if(go.getPosition().getY()+go.getTiledHeight()==level.getHeight()+1){
+						if(go.isComplex()){
+							GameObject gameObject = go.getRelationMaster();
+							while(gameObject!=null){
+								GameObject slaveObject = gameObject.getSlave();
+								objectsToRemove.add(gameObject);
+								gameObject = slaveObject;
+							}
+						}
+						else
+							objectsToRemove.add(go);
+					}
+				}
+			}
 			for(GameObject go : objectsToRemove){
 				level.getObjects().remove(go);
 			}
