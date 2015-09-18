@@ -93,4 +93,38 @@ public class GOBase{
 			return null;
 		}
 	}
+
+	protected class AssetsBase extends ArrayList<Asset>{
+
+		private static final long serialVersionUID = -4537400841401163897L;
+		
+		protected AssetsBase(){
+			super();
+			fill();
+		}
+		
+		//fill the list with data from xml file
+		public void fill(){
+			//for(Prefab p : xmlConverter.loadPrefabBase())
+			//	this.add(p);
+		}
+		
+		//refresh the list
+		public void refresh(){
+			this.clear();
+			this.fill();
+		}
+		
+		//Returns collection of strings to use in the JList
+		public ArrayList<Asset> getAtlasAssets(String atlasName){
+			ArrayList<Asset> assetCollection = new ArrayList<Asset>();
+			for(Asset a : this)
+				if(a.getAtlasName().equals(atlasName))
+					assetCollection.add(a);
+			if(!assetCollection.isEmpty())
+				return assetCollection;
+			else return null;
+		}
+		
+	}
 }

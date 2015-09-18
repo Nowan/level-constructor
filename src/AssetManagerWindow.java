@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -40,15 +41,30 @@ public class AssetManagerWindow extends JDialog{
 	
 	private JComboBox<String> selectedAtlasJCB;
 	private JPanel previewsJP;
+	private JPanel atlasManagementJP;
+	private JPanel assetManagementJP;
+	private JPanel addAssetJP;
+	private PreviewPanel detailedMainPreview;
+	private JPanel assetPartsJP;
+	
+	private PreviewPanel texturePreviewJP;
+	private JButton confirmJB;
+	private JButton discardJB;
+	private JTextField textureAddressJTF;
 	
 	//true means that window was created from GOManager, which means user can add/remove assets from all categories
 	//false means that window was created from ParticleManager, which means user must select a texture from selected category
 	private boolean chooseMode;
 	
+	//true means that "add asset" button was pressed, and Asset Manager now has a form to add new asset on the right
+	//false - Asset Manager has forms "Atlas management" and "Asset management" on the right
+	private boolean insertionMode;
+	
 	//Contains the name of selected texture, which will be passed back to PrefabManager
 	private String selectedTexture;
 	
 	private JFileChooser fileChooser;
+	
 	
 	public AssetManagerWindow(){
 		super(ConstructorWindow.instance, "Asset manager");
@@ -59,10 +75,11 @@ public class AssetManagerWindow extends JDialog{
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setResizable(false);
 		
+		chooseMode=false;
 		setContentPane(generateContent());
+		setInsertionMode(false);
 		if(selectedAtlasJCB.getItemCount()!=0)
 			selectedAtlasJCB.setSelectedIndex(0);
-		chooseMode=false;
 		
 		fileChooser=new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
@@ -81,7 +98,9 @@ public class AssetManagerWindow extends JDialog{
 		setResizable(false);
 		
 		setContentPane(generateContent());
+		setInsertionMode(false);
 		
+		chooseMode=true;
 		if(selectedAtlasJCB.getItemCount()!=0)
 			selectedAtlasJCB.setSelectedItem(categoryName);
 		selectedAtlasJCB.setEnabled(false);
@@ -122,10 +141,10 @@ public class AssetManagerWindow extends JDialog{
 		SpringLayout detailedPreviewSL = new SpringLayout();
 		detailedPreviewJP.setLayout(detailedPreviewSL);
 		
-		PreviewPanel mainPreview = new PreviewPanel();
-		mainPreview.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-5,300));
+		detailedMainPreview = new PreviewPanel();
+		detailedMainPreview.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-5,300));
 		
-		JPanel assetPartsJP = new JPanel();
+		assetPartsJP = new JPanel();
 		assetPartsJP.setPreferredSize(new Dimension(600,100));
 		assetPartsJP.setBackground(Color.BLACK);
 		
@@ -134,10 +153,10 @@ public class AssetManagerWindow extends JDialog{
 		assetPartsJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 		assetPartsJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		
-		detailedPreviewSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, mainPreview, 0, SpringLayout.HORIZONTAL_CENTER, detailedPreviewJP);
-		detailedPreviewJP.add(mainPreview);
+		detailedPreviewSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, detailedMainPreview, 0, SpringLayout.HORIZONTAL_CENTER, detailedPreviewJP);
+		detailedPreviewJP.add(detailedMainPreview);
 		
-		detailedPreviewSL.putConstraint(SpringLayout.NORTH, assetPartsJSP, 0, SpringLayout.SOUTH, mainPreview);
+		detailedPreviewSL.putConstraint(SpringLayout.NORTH, assetPartsJSP, 0, SpringLayout.SOUTH, detailedMainPreview);
 		detailedPreviewSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, assetPartsJSP, 0, SpringLayout.HORIZONTAL_CENTER, detailedPreviewJP);
 		detailedPreviewJP.add(assetPartsJSP);
 		
@@ -146,31 +165,146 @@ public class AssetManagerWindow extends JDialog{
 		SpringLayout lastSectionSL = new SpringLayout();
 		lastSectionJP.setLayout(lastSectionSL);
 		
-		JPanel atlasManagementJP = new JPanel();
-		atlasManagementJP.setPreferredSize(new Dimension(170,145));
+		atlasManagementJP = new JPanel();
+		atlasManagementJP.setPreferredSize(new Dimension(170,191));
 		atlasManagementJP.setBorder(BorderFactory.createTitledBorder("Atlas management"));
 		
+		JTextField atlasName = new JTextField();
+		atlasName.setToolTipText("Name of atlas to create");
+		atlasName.setFont(Globals.DEFAULT_FONT);
+		atlasName.setPreferredSize(new Dimension(150,22));
+		atlasManagementJP.add(atlasName);
+		
+		JButton addAtlasJB = new JButton("Create atlas");
+		addAtlasJB.setToolTipText("Creates an atlas with provided name");
+		addAtlasJB.setFont(Globals.DEFAULT_FONT);
+		addAtlasJB.setPreferredSize(new Dimension(150,34));
+		addAtlasJB.setContentAreaFilled(false);
+		atlasManagementJP.add(addAtlasJB);
+		
+		atlasManagementJP.add(new JLabel("  "));
+		
 		JButton rebuildAtlasJB = new JButton("Rebuild atlas");
+		rebuildAtlasJB.setToolTipText("Rebuilds selected atlas");
 		rebuildAtlasJB.setFont(Globals.DEFAULT_FONT);
 		rebuildAtlasJB.setPreferredSize(new Dimension(150,34));
 		rebuildAtlasJB.setContentAreaFilled(false);
 		atlasManagementJP.add(rebuildAtlasJB);
 		
 		JButton removeAtlasJB = new JButton("Remove atlas");
+		removeAtlasJB.setToolTipText("Removes selected atlas and all textures it contains");
 		removeAtlasJB.setFont(Globals.DEFAULT_FONT);
 		removeAtlasJB.setPreferredSize(new Dimension(150,34));
 		removeAtlasJB.setContentAreaFilled(false);
 		atlasManagementJP.add(removeAtlasJB);
 		
-		JButton addAtlasJB = new JButton("Create new atlas");
-		addAtlasJB.setFont(Globals.DEFAULT_FONT);
-		addAtlasJB.setPreferredSize(new Dimension(150,34));
-		addAtlasJB.setContentAreaFilled(false);
-		atlasManagementJP.add(addAtlasJB);
+		assetManagementJP = new JPanel();
+		assetManagementJP.setPreferredSize(new Dimension(170,104));
+		assetManagementJP.setBorder(BorderFactory.createTitledBorder("Asset management"));
+		
+		JButton selectAssetJB = new JButton("✔     Select asset");
+		selectAssetJB.setToolTipText("Select current asset as prefab texture");
+		selectAssetJB.setFont(Globals.DEFAULT_FONT);
+		selectAssetJB.setPreferredSize(new Dimension(150,34));
+		selectAssetJB.setContentAreaFilled(false);
+		selectAssetJB.setEnabled(chooseMode);
+		assetManagementJP.add(selectAssetJB);
+		
+		JButton removeAssetJB = new JButton("✗     Remove asset");
+		removeAssetJB.setToolTipText("Remove current asset from atlas");
+		removeAssetJB.setFont(Globals.DEFAULT_FONT);
+		removeAssetJB.setPreferredSize(new Dimension(150,34));
+		removeAssetJB.setContentAreaFilled(false);
+		assetManagementJP.add(removeAssetJB);
+		
+		addAssetJP = new JPanel();
+		addAssetJP.setBorder(BorderFactory.createTitledBorder("Create asset"));
+		addAssetJP.setPreferredSize(new Dimension(170,300));
+		SpringLayout addAssetSL = new SpringLayout();
+		addAssetJP.setLayout(addAssetSL);
+		
+		textureAddressJTF = new JTextField("choose texture...");
+		textureAddressJTF.setFont(Globals.DEFAULT_FONT);
+		textureAddressJTF.setEnabled(false);
+		textureAddressJTF.setPreferredSize(new Dimension(120,22));
+		
+		JButton textureAddressJB = new JButton("...");
+		textureAddressJB.setFont(Globals.PARAMETER_FONT);
+		textureAddressJB.setPreferredSize(new Dimension(40,22));
+		textureAddressJB.setContentAreaFilled(false);
+		textureAddressJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int returnValue = fileChooser.showOpenDialog(ConstructorWindow.instance);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+			          File selectedFile = fileChooser.getSelectedFile();
+			          String fileAddress = selectedFile.getAbsolutePath();
+			          try{
+							BufferedImage texture = ImageIO.read(new File(fileAddress));
+							texturePreviewJP.setImage(texture);
+							textureAddressJTF.setText(fileAddress);
+							confirmJB.setEnabled(true);
+						}
+						catch(IOException ex){
+							System.out.println(ex.getMessage());
+						}
+			    }
+			}
+		});
+		
+		texturePreviewJP = new PreviewPanel();
+		texturePreviewJP.setPreferredSize(new Dimension(160,220));
+		
+		confirmJB = new JButton("Confirm");
+		confirmJB.setFont(Globals.PARAMETER_FONT);
+		confirmJB.setPreferredSize(new Dimension(80,30));
+		confirmJB.setEnabled(false);
+		confirmJB.setMargin(new Insets(0,0,0,0));
+		confirmJB.setContentAreaFilled(false);
+		confirmJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				onConfirmClicked();
+			}
+		});
+		
+		discardJB = new JButton("Discard");
+		discardJB.setFont(Globals.PARAMETER_FONT);
+		discardJB.setPreferredSize(new Dimension(80,30));
+		discardJB.setMargin(new Insets(0,0,0,0));
+		discardJB.setContentAreaFilled(false);
+		discardJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				onDiscardClicked();
+			}
+		});
+		
+		addAssetSL.putConstraint(SpringLayout.NORTH, textureAddressJTF, 5, SpringLayout.NORTH, addAssetJP);
+		addAssetJP.add(textureAddressJTF);
+		addAssetSL.putConstraint(SpringLayout.VERTICAL_CENTER, textureAddressJB, 0, SpringLayout.VERTICAL_CENTER, textureAddressJTF);
+		addAssetSL.putConstraint(SpringLayout.WEST, textureAddressJB, 0, SpringLayout.EAST, textureAddressJTF);
+		addAssetJP.add(textureAddressJB);
+		addAssetSL.putConstraint(SpringLayout.NORTH, texturePreviewJP, 0, SpringLayout.SOUTH, textureAddressJTF);
+		addAssetJP.add(texturePreviewJP);
+		addAssetSL.putConstraint(SpringLayout.NORTH, confirmJB, 0, SpringLayout.SOUTH, texturePreviewJP);
+		addAssetSL.putConstraint(SpringLayout.WEST, confirmJB, 0, SpringLayout.HORIZONTAL_CENTER, addAssetJP);
+		addAssetJP.add(confirmJB);
+		addAssetSL.putConstraint(SpringLayout.NORTH, discardJB, 0, SpringLayout.SOUTH, texturePreviewJP);
+		addAssetSL.putConstraint(SpringLayout.EAST, discardJB, 0, SpringLayout.HORIZONTAL_CENTER, addAssetJP);
+		addAssetJP.add(discardJB);
 		
 		lastSectionSL.putConstraint(SpringLayout.NORTH, atlasManagementJP, 10, SpringLayout.NORTH, lastSectionJP);
 		lastSectionSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, atlasManagementJP, 0, SpringLayout.HORIZONTAL_CENTER, lastSectionJP);
 		lastSectionJP.add(atlasManagementJP);
+		
+		lastSectionSL.putConstraint(SpringLayout.NORTH, assetManagementJP, 25, SpringLayout.SOUTH, atlasManagementJP);
+		lastSectionSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, assetManagementJP, 0, SpringLayout.HORIZONTAL_CENTER, lastSectionJP);
+		lastSectionJP.add(assetManagementJP);
+		
+		lastSectionSL.putConstraint(SpringLayout.VERTICAL_CENTER, addAssetJP, 0, SpringLayout.VERTICAL_CENTER, lastSectionJP);
+		lastSectionSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, addAssetJP, 0, SpringLayout.HORIZONTAL_CENTER, lastSectionJP);
+		lastSectionJP.add(addAssetJP);
 		
 		panel.add(selectedAtlasJCB);
 		slayout.putConstraint(SpringLayout.NORTH, previewsJSP, 0, SpringLayout.SOUTH, selectedAtlasJCB);
@@ -186,6 +320,28 @@ public class AssetManagerWindow extends JDialog{
 	public String showDialog(){
 		setVisible(true);
 		return selectedTexture;
+	}
+	
+	private void setInsertionMode(boolean flag){
+		insertionMode = flag;
+		atlasManagementJP.setVisible(!insertionMode);
+		for(Component c:atlasManagementJP.getComponents())
+			c.setVisible(!insertionMode);
+		assetManagementJP.setVisible(!insertionMode);
+		for(Component c:assetManagementJP.getComponents())
+			c.setVisible(!insertionMode);
+		addAssetJP.setVisible(insertionMode);
+		for(Component c:addAssetJP.getComponents())
+			c.setVisible(insertionMode);
+		
+		if(insertionMode){
+			detailedMainPreview.setBackground(Color.DARK_GRAY);
+			assetPartsJP.setBackground(Color.GRAY);
+		}
+		else{
+			detailedMainPreview.setBackground(Color.BLACK);
+			assetPartsJP.setBackground(Color.BLACK);
+		}
 	}
 	
 	private void onAtlasChanged(){
@@ -212,12 +368,8 @@ public class AssetManagerWindow extends JDialog{
 		addAssetJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				NewAssetDialog newAssetDialog = new NewAssetDialog(selectedAtlasJCB.getSelectedItem().toString());
-				boolean operationSuccess = newAssetDialog.showDialog();
-				if(operationSuccess){
-					rebuildAtlas();
-					onAtlasChanged();
-				}
+				setInsertionMode(true);
+				
 			}
 		});
 		
@@ -235,6 +387,50 @@ public class AssetManagerWindow extends JDialog{
 		TexturePacker.process(settings, 
 			Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString(), 
 			Globals.ATLASES_FOLDER, selectedAtlasJCB.getSelectedItem().toString());
+	}
+	
+	private void onConfirmClicked(){
+		
+		//copy texture image to the textures folder
+		String textureAddress = textureAddressJTF.getText();
+		
+		String categoryName = selectedAtlasJCB.getSelectedItem().toString();
+		//generating texture name in form "categoryindex-number.png"
+		String categoryIndex = GOBase.prefabCategoryBase.get(categoryName).getID();
+		
+		int lastIndex = 0;
+		File dir = new File(Globals.TEXTURES_FOLDER+categoryName);
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) 
+			for (File child : directoryListing) {
+				if(child.getName().endsWith(".png")){
+					//System.out.println(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
+					int indx = Integer.valueOf(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
+					if(indx>lastIndex)
+						lastIndex=indx;
+				}
+			}
+		
+		String generatedTextureName = categoryIndex+"-"+String.format("%02d", lastIndex+1);
+		
+		String textureAddress2 = Globals.TEXTURES_FOLDER+categoryName+"/"+generatedTextureName+textureAddress.substring(textureAddress.lastIndexOf('.'));
+		
+		if(!textureAddress.equals(textureAddress2))
+			try{
+				Files.copy(Paths.get(textureAddress),Paths.get(textureAddress2), StandardCopyOption.REPLACE_EXISTING);
+			}
+			catch(Exception ex){
+				System.out.println(ex.getMessage());
+			}
+		
+		onAtlasChanged();
+		onDiscardClicked();
+	}
+	
+	private void onDiscardClicked(){
+		texturePreviewJP.hideImage();
+		textureAddressJTF.setText("choose texture...");;
+		setInsertionMode(false);
 	}
 	
 	private class AssetPreview extends PreviewPanel implements MouseListener{
