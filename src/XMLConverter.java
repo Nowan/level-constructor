@@ -19,6 +19,8 @@ public class XMLConverter {
 	
 	private static final String PREFAB_CATEGORY_BASE_ADDRESS = "src/resourses/prefabcategorybase.xml";
 	
+	private static final String ATLAS_BASE_ADDRESS = "src/resourses/atlasesbase.xml";
+	
 	private File fXmlFile;
 	private DocumentBuilderFactory dbFactory;
 	private DocumentBuilder dBuilder;
@@ -34,7 +36,7 @@ public class XMLConverter {
 		}
 	}
 	
-	//Returns list of prefabs currently existing in prafabsbase.xml file
+	//Returns list of prefabs currently existing in prefabsbase.xml file
 	public ArrayList<Prefab> loadPrefabBase(){
 		try {
 			fXmlFile = new File(PREFAB_BASE_ADDRESS);
@@ -53,7 +55,9 @@ public class XMLConverter {
 					String categoryID = eElement.getAttribute("category");
 					int tiledWidth = Integer.parseInt(eElement.getAttribute("tiledwidth"));
 					int tiledHeight = Integer.parseInt(eElement.getAttribute("tiledheight"));
-					String textureAddress= Globals.TEXTURES_FOLDER+GOBase.prefabCategoryBase.getCategoryByID(categoryID).getName()+"/"+eElement.getElementsByTagName("texture").item(0).getTextContent();
+					String assetName=eElement.getElementsByTagName("texture").item(0).getTextContent();
+					assetName = assetName.substring(0,assetName.length()-4);
+					System.out.println(assetName);
 					String description= eElement.getElementsByTagName("description").item(0).getTextContent();
 					
 					ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
@@ -69,7 +73,7 @@ public class XMLConverter {
 						}
 					}
 					
-					prefabs.add(new Prefab(ID,categoryID,tiledWidth,tiledHeight,textureAddress,description,additiveAttributes));
+					prefabs.add(new Prefab(ID,categoryID,tiledWidth,tiledHeight,assetName,description,additiveAttributes));
 				}
 			}
 			//Setting up links
@@ -343,6 +347,99 @@ public class XMLConverter {
 			e.printStackTrace();
 			return null;
 		    }
-		
 	}
+	
+	public ArrayList<Atlas> loadAtlasesBase(){
+		try {
+			fXmlFile = new File(ATLAS_BASE_ADDRESS);
+			doc = dBuilder.parse(fXmlFile);
+			doc.getDocumentElement().normalize();
+			
+			ArrayList<Atlas> atlasesBase = new ArrayList<Atlas>();
+
+			NodeList atlasNList = doc.getElementsByTagName("atlas");
+					
+			for (int temp = 0; temp < atlasNList.getLength(); temp++) {
+				Node atlasNode = atlasNList.item(temp);
+				if (atlasNode.getNodeType() == Node.ELEMENT_NODE) {
+					
+					Element atlasElement = (Element) atlasNode;
+					
+					String atlasName = atlasElement.getAttribute("name");
+					
+					Atlas atlas = new Atlas(atlasName);
+					
+					NodeList assetNList = atlasElement.getElementsByTagName("asset");
+					for(int i=0; i<assetNList.getLength();i++){
+						Node assetNode = assetNList.item(i);
+						if (assetNode.getNodeType() == Node.ELEMENT_NODE) {
+							Element assetElement = (Element) assetNode;
+							String assetName = assetElement.getAttribute("name");
+							
+							Asset asset = new Asset(atlas,assetName);
+							
+							ArrayList<String> animationFrames = new ArrayList<String>();
+							NodeList frameNList = atlasElement.getElementsByTagName("frame");
+							for(int f=0;f<frameNList.getLength();f++){
+								Node frameNode = frameNList.item(i);
+								if (frameNode.getNodeType() == Node.ELEMENT_NODE) {
+									Element frameElement = (Element) assetNode;
+									animationFrames.add(frameElement.getNodeValue());
+								}
+							}
+							asset.setAnimationFrames(animationFrames);
+							atlas.getAssets().add(asset);
+						}
+					}
+					atlasesBase.add(atlas);
+				}
+			}
+			return atlasesBase;
+		    } catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		    }
+		}
+	
+	public boolean saveAtlasesBase(){
+		try {
+			// root elements
+			Document doc = dBuilder.newDocument();
+			Element rootElement = doc.createElement("assetsbase");
+			doc.appendChild(rootElement);
+
+			for(Atlas atl : GOBase.atlasesBase){;
+				Element atlasElement = doc.createElement("atlas");
+				rootElement.appendChild(atlasElement);
+
+				atlasElement.setAttribute("name", atl.getName());
+				
+				for(Asset ast : atl.getAssets()){
+					Element assetElement = doc.createElement("asset");
+					assetElement.setAttribute("name", ast.getAssetName());
+					for(String s2 : ast.getAnimationFrames()){
+						Element frameElement = doc.createElement("frame");
+						frameElement.setNodeValue(s2);
+						assetElement.appendChild(frameElement);
+					}
+					atlasElement.appendChild(assetElement);
+				}
+			}
+			// write the content into xml file
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(new File(ATLAS_BASE_ADDRESS));
+			
+			transformer.transform(source, result);
+			
+			return true;
+		} 
+		catch (Exception ex) {
+			  ex.printStackTrace();
+			  
+			  return false;
+		}
+	}
+	
 }

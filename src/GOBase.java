@@ -8,9 +8,15 @@ public class GOBase{
 	
 	public static PrefabCategoryBase prefabCategoryBase;
 	
+	public static AssetsBase assetsBase;
+	
+	public static AtlasesBase atlasesBase;
+	
 	public GOBase(){
-		prefabCategoryBase=new PrefabCategoryBase();
-		prefabsBase=new PrefabsBase();
+		atlasesBase = new AtlasesBase();
+		assetsBase = new AssetsBase();
+		prefabCategoryBase = new PrefabCategoryBase();
+		prefabsBase = new PrefabsBase();
 	}
 	
 	protected class PrefabsBase extends ArrayList<Prefab>{
@@ -94,6 +100,52 @@ public class GOBase{
 		}
 	}
 
+	protected class AtlasesBase extends ArrayList<Atlas>{
+
+		private static final long serialVersionUID = -4537400841401163897L;
+		
+		protected AtlasesBase(){
+			super();
+			fill();
+		}
+		
+		//fill the list with data from xml file
+		public void fill(){
+			for(Atlas a : xmlConverter.loadAtlasesBase())
+				this.add(a);
+		}
+		
+		//refresh the list
+		public void refresh(){
+			this.clear();
+			this.fill();
+		}
+		
+		public Atlas get(String atlasName){
+			for(Atlas a : this){
+				if(a.getName().equals(atlasName))
+					return a;
+			}
+			return null;
+		}
+		
+		public String[] getNamesArray(){
+			String[] array = new String [this.size()];
+			for(int i=0;i<this.size();i++)
+				array[i] = this.get(i).getName();
+			return array;
+		}
+		
+		@Override 
+		public boolean remove(Object o){
+			boolean returnBit = super.remove(o);
+			Atlas atlas = (Atlas)o;
+			for(Asset a : atlas.getAssets())
+				GOBase.assetsBase.remove(a);
+			return returnBit;
+		}
+	}
+	
 	protected class AssetsBase extends ArrayList<Asset>{
 
 		private static final long serialVersionUID = -4537400841401163897L;
@@ -105,8 +157,10 @@ public class GOBase{
 		
 		//fill the list with data from xml file
 		public void fill(){
-			//for(Prefab p : xmlConverter.loadPrefabBase())
-			//	this.add(p);
+			for(Atlas atl : atlasesBase)
+				for(Asset ast : atl.getAssets())
+					this.add(ast);
+			
 		}
 		
 		//refresh the list
@@ -115,16 +169,12 @@ public class GOBase{
 			this.fill();
 		}
 		
-		//Returns collection of strings to use in the JList
-		public ArrayList<Asset> getAtlasAssets(String atlasName){
-			ArrayList<Asset> assetCollection = new ArrayList<Asset>();
-			for(Asset a : this)
-				if(a.getAtlasName().equals(atlasName))
-					assetCollection.add(a);
-			if(!assetCollection.isEmpty())
-				return assetCollection;
-			else return null;
+		public Asset get(String assetName){
+			for(Asset a : this){
+				if(a.getAssetName().equals(assetName))
+					return a;
+			}
+			return null;
 		}
-		
 	}
 }

@@ -1,22 +1,27 @@
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 public class Asset {
 
-	private String atlasName;
+	private Atlas atlas;
 	private String assetName;
 	private ArrayList<String> animationFrames;
+	private BufferedImage assetTexture;
 	
-	public Asset(String atlasName, String assetName){
-		this.atlasName = atlasName;
+	public Asset(Atlas atlas, String assetName){
+		this.atlas = atlas;
 		this.assetName = assetName;
-	}
-
-	public String getAtlasName() {
-		return atlasName;
-	}
-
-	public void setAtlasName(String atlasName) {
-		this.atlasName = atlasName;
+		String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+assetName+".png";
+		try{
+			this.setAssetTexture(ImageIO.read(new File(textureAddress)));
+		}
+		catch(IOException ex){
+			System.out.println(ex.getMessage());
+		}
 	}
 
 	public String getAssetName() {
@@ -38,4 +43,17 @@ public class Asset {
 	public boolean isAnimated(){
 		return animationFrames.size()>0;
 	}
+
+	public BufferedImage getAssetTexture() {
+		return assetTexture;
+	}
+
+	public void setAssetTexture(BufferedImage assetTexture) {
+		this.assetTexture = assetTexture;
+	}
+
+	public Atlas getAtlas() {
+		return atlas;
+	}
+
 }

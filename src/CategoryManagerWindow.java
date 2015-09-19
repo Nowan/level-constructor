@@ -141,11 +141,6 @@ public class CategoryManagerWindow extends JDialog{
 		    			    "Message",
 		    			    JOptionPane.YES_NO_OPTION);
 					if(n==0){
-					
-						//delete texture folder of selected category
-						new File(Globals.TEXTURES_FOLDER+currentlySelectedCategory.getName()).delete();
-						
-					
 					//number of prefabs of the deleted category
 					int pcn=0;
 					for(int i=0;i<GOBase.prefabsBase.size();i++)
@@ -222,10 +217,6 @@ public class CategoryManagerWindow extends JDialog{
 				//if editMode is on, the button "+" changes to "Save", which saves all
 				//the changes made in sandboxCategory to the original PrefabCategory and xml file
 				if(editMode){
-					
-					//rename texture folder for new category
-					new File(Globals.TEXTURES_FOLDER+currentlySelectedCategory.getName()).renameTo(new File(Globals.TEXTURES_FOLDER+sandboxCategory.getName()));
-					
 					currentlySelectedCategory.setID(sandboxCategory.getID());
 					currentlySelectedCategory.setName(sandboxCategory.getName());
 					currentlySelectedCategory.setObstacleBit(sandboxCategory.getObstacleBit());
@@ -261,9 +252,6 @@ public class CategoryManagerWindow extends JDialog{
 						editJB.setEnabled(true);
 					if(!attributesJSP.isVisible())
 						attributesJSP.setVisible(true);
-					
-					//create texture folder for new category
-					new File(Globals.TEXTURES_FOLDER+category.getName()).mkdirs();
 					
 					//saving changes to prefabcategorybase.xml
 					Globals.xmlConverter.savePrefabCategoryBase();

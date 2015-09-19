@@ -6,6 +6,8 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
@@ -17,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -39,9 +42,12 @@ public class AssetManagerWindow extends JDialog{
 
 	private final AssetManagerWindow linkToAssetManager = this;
 	
-	private JComboBox<String> selectedAtlasJCB;
+	private DefaultComboBoxModel<String> atlasBaseModel;
+	private JComboBox<String> atlasBaseJCB;
 	private JPanel previewsJP;
 	private JPanel atlasManagementJP;
+	private JTextField atlasName;
+	private JButton createAtlasJB;
 	private JPanel assetManagementJP;
 	private JPanel addAssetJP;
 	private PreviewPanel detailedMainPreview;
@@ -78,8 +84,8 @@ public class AssetManagerWindow extends JDialog{
 		chooseMode=false;
 		setContentPane(generateContent());
 		setInsertionMode(false);
-		if(selectedAtlasJCB.getItemCount()!=0)
-			selectedAtlasJCB.setSelectedIndex(0);
+		if(atlasBaseJCB.getItemCount()!=0)
+			atlasBaseJCB.setSelectedIndex(0);
 		
 		fileChooser=new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("image", new String[] {"png","jpeg","jpg","gif"});
@@ -101,9 +107,9 @@ public class AssetManagerWindow extends JDialog{
 		setInsertionMode(false);
 		
 		chooseMode=true;
-		if(selectedAtlasJCB.getItemCount()!=0)
-			selectedAtlasJCB.setSelectedItem(categoryName);
-		selectedAtlasJCB.setEnabled(false);
+		if(atlasBaseJCB.getItemCount()!=0)
+			atlasBaseJCB.setSelectedItem(categoryName);
+		atlasBaseJCB.setEnabled(false);
 		
 		setVisible(false);
 	}
@@ -124,10 +130,12 @@ public class AssetManagerWindow extends JDialog{
 		previewsJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		previewsJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-		selectedAtlasJCB = new JComboBox<String>(GOBase.prefabCategoryBase.getNameCollection());
-		selectedAtlasJCB.setFont(Globals.DEFAULT_FONT);
-		selectedAtlasJCB.setPreferredSize(new Dimension(previewsJSP.getPreferredSize().width,25));
-		selectedAtlasJCB.addActionListener(new ActionListener(){
+		atlasBaseModel = new DefaultComboBoxModel(GOBase.atlasesBase.getNamesArray());
+		
+		atlasBaseJCB = new JComboBox<String>(atlasBaseModel);
+		atlasBaseJCB.setFont(Globals.DEFAULT_FONT);
+		atlasBaseJCB.setPreferredSize(new Dimension(previewsJSP.getPreferredSize().width,25));
+		atlasBaseJCB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				onAtlasChanged();
@@ -169,18 +177,33 @@ public class AssetManagerWindow extends JDialog{
 		atlasManagementJP.setPreferredSize(new Dimension(170,191));
 		atlasManagementJP.setBorder(BorderFactory.createTitledBorder("Atlas management"));
 		
-		JTextField atlasName = new JTextField();
+		atlasName = new JTextField();
 		atlasName.setToolTipText("Name of atlas to create");
 		atlasName.setFont(Globals.DEFAULT_FONT);
 		atlasName.setPreferredSize(new Dimension(150,22));
+		atlasName.addKeyListener(new KeyListener(){
+			@Override public void keyPressed(KeyEvent arg0) {}
+			@Override public void keyReleased(KeyEvent arg0) {
+				createAtlasJB.setEnabled(!atlasName.getText().isEmpty());
+			}
+			@Override public void keyTyped(KeyEvent arg0) {}
+			
+		});
 		atlasManagementJP.add(atlasName);
 		
-		JButton addAtlasJB = new JButton("Create atlas");
-		addAtlasJB.setToolTipText("Creates an atlas with provided name");
-		addAtlasJB.setFont(Globals.DEFAULT_FONT);
-		addAtlasJB.setPreferredSize(new Dimension(150,34));
-		addAtlasJB.setContentAreaFilled(false);
-		atlasManagementJP.add(addAtlasJB);
+		createAtlasJB = new JButton("Create atlas");
+		createAtlasJB.setToolTipText("Creates an atlas with provided name");
+		createAtlasJB.setFont(Globals.DEFAULT_FONT);
+		createAtlasJB.setPreferredSize(new Dimension(150,34));
+		createAtlasJB.setContentAreaFilled(false);
+		createAtlasJB.setEnabled(false);
+		createAtlasJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onCreateAtlasClicked();
+			}
+		});
+		atlasManagementJP.add(createAtlasJB);
 		
 		atlasManagementJP.add(new JLabel("  "));
 		
@@ -189,6 +212,12 @@ public class AssetManagerWindow extends JDialog{
 		rebuildAtlasJB.setFont(Globals.DEFAULT_FONT);
 		rebuildAtlasJB.setPreferredSize(new Dimension(150,34));
 		rebuildAtlasJB.setContentAreaFilled(false);
+		rebuildAtlasJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				rebuildAtlas();
+			}
+		});
 		atlasManagementJP.add(rebuildAtlasJB);
 		
 		JButton removeAtlasJB = new JButton("Remove atlas");
@@ -196,6 +225,12 @@ public class AssetManagerWindow extends JDialog{
 		removeAtlasJB.setFont(Globals.DEFAULT_FONT);
 		removeAtlasJB.setPreferredSize(new Dimension(150,34));
 		removeAtlasJB.setContentAreaFilled(false);
+		removeAtlasJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				onRemoveAtlasClicked();
+			}
+		});
 		atlasManagementJP.add(removeAtlasJB);
 		
 		assetManagementJP = new JPanel();
@@ -306,8 +341,8 @@ public class AssetManagerWindow extends JDialog{
 		lastSectionSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, addAssetJP, 0, SpringLayout.HORIZONTAL_CENTER, lastSectionJP);
 		lastSectionJP.add(addAssetJP);
 		
-		panel.add(selectedAtlasJCB);
-		slayout.putConstraint(SpringLayout.NORTH, previewsJSP, 0, SpringLayout.SOUTH, selectedAtlasJCB);
+		panel.add(atlasBaseJCB);
+		slayout.putConstraint(SpringLayout.NORTH, previewsJSP, 0, SpringLayout.SOUTH, atlasBaseJCB);
 		panel.add(previewsJSP);
 		slayout.putConstraint(SpringLayout.WEST, detailedPreviewJP, 0, SpringLayout.EAST, previewsJSP);
 		panel.add(detailedPreviewJP);
@@ -346,17 +381,9 @@ public class AssetManagerWindow extends JDialog{
 	
 	private void onAtlasChanged(){
 		previewsJP.removeAll();
-		//checking the folder with textures
-		File dir = new File(Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString());
-		File[] directoryListing = dir.listFiles();
 		int newHeight=0;
-		if (directoryListing != null) 
-			for (File child : directoryListing) {
-				if(child.getName().endsWith(".png")){
-					previewsJP.add(new AssetPreview(child));
-					newHeight+=AssetPreview.HEIGHT+15;
-				}
-			}
+		//TODO passing through assets of current atlas
+		
 		
 		JButton addAssetJB = new JButton("+");
 		addAssetJB.setFont(Globals.INDEX_FONT);
@@ -385,8 +412,45 @@ public class AssetManagerWindow extends JDialog{
 		//settings.maxWidth=1024;
 		//settings.maxHeight=1024;
 		TexturePacker.process(settings, 
-			Globals.TEXTURES_FOLDER+selectedAtlasJCB.getSelectedItem().toString(), 
-			Globals.ATLASES_FOLDER, selectedAtlasJCB.getSelectedItem().toString());
+			Globals.TEXTURES_FOLDER+atlasBaseJCB.getSelectedItem().toString(), 
+			Globals.ATLASES_FOLDER, atlasBaseJCB.getSelectedItem().toString());
+	}
+	
+	private void onCreateAtlasClicked(){
+		String newAtlasName =  atlasName.getText();
+		boolean atlasInBase = false;
+		for(Atlas a : GOBase.atlasesBase)
+			if(newAtlasName.equals(a.getName())){
+				JOptionPane.showMessageDialog(this, "Atlas already exists");
+				atlasInBase=true;
+			}
+		if(atlasInBase) return;
+		//create texture folder for new atlas
+		new File(Globals.TEXTURES_FOLDER+atlasName.getText()).mkdirs();
+		
+		GOBase.atlasesBase.add(new Atlas(newAtlasName));
+		Globals.xmlConverter.saveAtlasesBase();
+		
+		JOptionPane.showMessageDialog(this, "Atlas successfully created!");
+		
+		atlasName.setText("");
+		createAtlasJB.setEnabled(false);
+		refreshAtlasList();
+	}
+	
+	private void onRemoveAtlasClicked(){
+		Atlas selectedAtlas = GOBase.atlasesBase.get(atlasBaseJCB.getSelectedItem().toString());
+		//delete texture folder of selected category
+		new File(Globals.TEXTURES_FOLDER+selectedAtlas.getName()).delete();
+		GOBase.atlasesBase.remove(selectedAtlas);
+		Globals.xmlConverter.saveAtlasesBase();
+		refreshAtlasList();
+	}
+	
+	private void refreshAtlasList(){
+		atlasBaseModel.removeAllElements();
+		for(Atlas a : GOBase.atlasesBase)
+			atlasBaseModel.addElement(a.getName());
 	}
 	
 	private void onConfirmClicked(){
@@ -394,7 +458,7 @@ public class AssetManagerWindow extends JDialog{
 		//copy texture image to the textures folder
 		String textureAddress = textureAddressJTF.getText();
 		
-		String categoryName = selectedAtlasJCB.getSelectedItem().toString();
+		String categoryName = atlasBaseJCB.getSelectedItem().toString();
 		//generating texture name in form "categoryindex-number.png"
 		String categoryIndex = GOBase.prefabCategoryBase.get(categoryName).getID();
 		

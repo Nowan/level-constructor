@@ -17,7 +17,7 @@ public class Prefab {
 		
 		private String textureAddress;
 		
-		private BufferedImage texture;
+		private Asset asset;
 		
 		private String categoryID;
 		
@@ -32,12 +32,12 @@ public class Prefab {
 		private Prefab masterPrefab;
 		
 		public Prefab(String ID, String categoryID, int tiledWidth, int tiledHeight, 
-				String prefabTexture, String description, ArrayList<AdditiveAttribute> additiveAttributes){
+				String assetName, String description, ArrayList<AdditiveAttribute> additiveAttributes){
 			this.setPrefabID(ID);  
 			this.setCategory(categoryID);
 			this.setTiledWidth(tiledWidth);
 			this.setTiledHeight(tiledHeight);
-			this.setTextureAddress(prefabTexture);
+			this.setAsset(assetName);
 			this.setDesctiption(description);
 			this.setAdditiveAttributes(additiveAttributes);
 		}
@@ -50,25 +50,15 @@ public class Prefab {
 			return textureAddress.substring(textureAddress.lastIndexOf('/')+1);
 		}
 		
-		public void setTextureName(String textureName) {
-			setTextureAddress(Globals.TEXTURES_FOLDER+getCategory().getName()+"/"+textureName);
-		}
-		
-		public void setTextureAddress(String textureAddress) {
-			this.textureAddress = textureAddress;
-			try{
-				this.setTexture(ImageIO.read(new File(textureAddress)));
-			}
-			catch(IOException ex){
-				System.out.println(ex.getMessage());
-			}
-		}
-		
 		public BufferedImage getTexture() {
-			return texture;
+			return asset.getAssetTexture();
 		}
-		public void setTexture(BufferedImage texture) {
-			this.texture = texture;
+		
+		public void setAsset(String assetName) {
+			setAsset(GOBase.assetsBase.get(assetName));
+		}
+		public void setAsset(Asset asset) {
+			this.asset = asset;
 		}
 		public String getCategoryID() {
 			return categoryID;

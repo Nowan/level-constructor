@@ -478,7 +478,7 @@ public class PrefabManagerWindow  extends JDialog{
 				editPrefab.setCategory(GOBase.prefabCategoryBase.get(categoryName).getID());
 				editPrefab.setTiledWidth(tw);
 				editPrefab.setTiledHeight(th);
-				editPrefab.setTextureName(assetName);
+				editPrefab.setAsset(assetName);
 				editPrefab.setDesctiption(description);
 				editPrefab.setAdditiveAttributes(additiveAttributes);
 			}
