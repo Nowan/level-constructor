@@ -208,7 +208,7 @@ public class TilesTab extends JPanel{
 			tableModel.addRow(new Object[]{"Category ID ",p.getCategoryID()});
 			tableModel.addRow(new Object[]{"Tiled width ",p.getTiledWidth()});
 			tableModel.addRow(new Object[]{"Tiled height ",p.getTiledHeight()});
-			tableModel.addRow(new Object[]{"Texture ",p.getTextureAddress()});
+			tableModel.addRow(new Object[]{"Texture ",p.getAtlasName()+"/"+p.getAssetName()});
 			for(AdditiveAttribute a : p.getAdditiveAttributes())
 				tableModel.addRow(new Object[]{a.getAttributeName(),a.getAttributeValue()});
 		}

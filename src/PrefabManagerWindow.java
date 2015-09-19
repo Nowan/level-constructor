@@ -91,7 +91,7 @@ public class PrefabManagerWindow  extends JDialog{
 		tiledWidthJTF.setText(String.valueOf(editPrefab.getTiledWidth()));
 		tiledHeightJTF.setText(String.valueOf(editPrefab.getTiledHeight()));
 		assetPP.setImage(editPrefab.getTexture());
-		assetName = editPrefab.getTextureName();
+		assetName = editPrefab.getAssetName();
 		descriptionJTA.setText(editPrefab.getDesctiption());
 		setAdditiveAttributes(P.getCategory().getName());
 		for(int i=0;i<editPrefab.getCategory().getAdditiveAttributes().size();i++){
@@ -186,9 +186,9 @@ public class PrefabManagerWindow  extends JDialog{
 			public void mouseClicked(MouseEvent e) {
 				// get selected texture from AssetManager
 				AssetManagerWindow assetManagerWindow = new AssetManagerWindow(categoryJCB.getSelectedItem().toString());
-				assetName = assetManagerWindow.showDialog();
-				if(assetName!=null){
-					String textureAddress = Globals.TEXTURES_FOLDER+categoryJCB.getSelectedItem().toString()+"/"+assetName;
+				Asset asset = assetManagerWindow.showDialog();
+				if(asset!=null){
+					String textureAddress = Globals.TEXTURES_FOLDER+asset.getAtlas().getName()+"/"+asset.getAssetName();
 					assetPP.setImage(textureAddress);
 				}
 			}
@@ -450,8 +450,6 @@ public class PrefabManagerWindow  extends JDialog{
 			String description = descriptionJTA.getText();
 			String id = indexJTF.getText();
 			String categoryName = categoryJCB.getSelectedItem().toString();
-			String textureAddress = Globals.TEXTURES_FOLDER+categoryName+"/"+assetName;
-			System.out.println(textureAddress);
 			PrefabCategory category = GOBase.prefabCategoryBase.get(categoryName);
 			ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
 			for(int i=0;i<category.getAdditiveAttributes().size();i++){
@@ -471,7 +469,7 @@ public class PrefabManagerWindow  extends JDialog{
 			
 			//if there is no prefab to edit, add new Prefab to the base
 			if(editPrefab==null)
-				GOBase.prefabsBase.add(new Prefab(id,category.getID(),tw,th,textureAddress,description,additiveAttributes));
+				GOBase.prefabsBase.add(new Prefab(id,category.getID(),tw,th,GOBase.assetsBase.get(assetName),description,additiveAttributes));
 			//else - save the parameters to editPrefab
 			else{
 				editPrefab.setPrefabID(id);

@@ -16,6 +16,7 @@ public class Asset {
 	public Asset(Atlas atlas, String assetName){
 		this.atlas = atlas;
 		this.assetName = assetName;
+		this.frameNames = new ArrayList<String>();
 		this.frameTextures = new ArrayList<BufferedImage>();
 		String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+assetName+".png";
 		try{
@@ -43,7 +44,6 @@ public class Asset {
 		for(int i=0;i<animationFrames.size();i++){
 			try{
 				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+animationFrames.get(i)+".png";
-				System.out.println("!"+textureAddress);
 				frameTextures.add(ImageIO.read(new File(textureAddress)));
 			}
 			catch(IOException ex){

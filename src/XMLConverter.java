@@ -55,9 +55,9 @@ public class XMLConverter {
 					String categoryID = eElement.getAttribute("category");
 					int tiledWidth = Integer.parseInt(eElement.getAttribute("tiledwidth"));
 					int tiledHeight = Integer.parseInt(eElement.getAttribute("tiledheight"));
-					String assetName=eElement.getElementsByTagName("texture").item(0).getTextContent();
-					assetName = assetName.substring(0,assetName.length()-4);
-					System.out.println(assetName);
+					Element textureElement = (Element)eElement.getElementsByTagName("texture").item(0);
+					String assetName = textureElement.getAttribute("asset");
+					Asset asset = GOBase.assetsBase.get(assetName);
 					String description= eElement.getElementsByTagName("description").item(0).getTextContent();
 					
 					ArrayList<AdditiveAttribute> additiveAttributes = new ArrayList<AdditiveAttribute>();
@@ -73,7 +73,7 @@ public class XMLConverter {
 						}
 					}
 					
-					prefabs.add(new Prefab(ID,categoryID,tiledWidth,tiledHeight,assetName,description,additiveAttributes));
+					prefabs.add(new Prefab(ID,categoryID,tiledWidth,tiledHeight,asset,description,additiveAttributes));
 				}
 			}
 			//Setting up links
@@ -120,7 +120,8 @@ public class XMLConverter {
 					prefab.setAttribute("link", P.getSlavePrefab().getPrefabID());
 				
 				Element texture = doc.createElement("texture");
-				texture.appendChild(doc.createTextNode(P.getTextureName()));
+				texture.setAttribute("atlas", P.getAtlasName());
+				texture.setAttribute("asset", P.getAssetName());
 				prefab.appendChild(texture);
 				
 				Element description = doc.createElement("description");
@@ -260,7 +261,7 @@ public class XMLConverter {
 				gameObject.setAttribute("posy", String.valueOf(go.getPosition().y));
 				gameObject.setAttribute("width", String.valueOf(go.getTiledWidth()));
 				gameObject.setAttribute("height", String.valueOf(go.getTiledHeight()));
-				gameObject.setAttribute("texture", go.getPrefab().getTextureName());
+				gameObject.setAttribute("texture", go.getPrefab().getAssetName());
 				if(go.isMaster())
 					gameObject.setAttribute("link", String.valueOf(go.getSlave().getIndex()));
 				
@@ -404,7 +405,7 @@ public class XMLConverter {
 		try {
 			// root elements
 			Document doc = dBuilder.newDocument();
-			Element rootElement = doc.createElement("assetsbase");
+			Element rootElement = doc.createElement("atlasesbase");
 			doc.appendChild(rootElement);
 
 			for(Atlas atl : GOBase.atlasesBase){;

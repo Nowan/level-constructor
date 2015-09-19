@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<assetsbase>
+<atlas name="ceiling">
+	<asset name="ceiling-01"/>
+	<asset name="ceiling-02"/>
+	<asset name="ceiling-03"/>
+</atlas>
+<atlas name="floor">
+	<asset name="floor-01">
+		<frame texture="floor-01_02" />
+		<frame texture="floor-01_02" />
+		<frame texture="floor-01_02" />
+	</asset>
+</atlas>
+<atlas name="usual_door">
+	<asset name="usual_door-01"/>
+	<asset name="usual_door-02"/>
+</atlas>
+</assetsbase>

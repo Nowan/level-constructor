@@ -14,9 +14,7 @@ public class Prefab {
 		
 		//How many tiles object takes for a height
 		private int tiledHeight;
-		
-		private String textureAddress;
-		
+
 		private Asset asset;
 		
 		private String categoryID;
@@ -32,22 +30,22 @@ public class Prefab {
 		private Prefab masterPrefab;
 		
 		public Prefab(String ID, String categoryID, int tiledWidth, int tiledHeight, 
-				String assetName, String description, ArrayList<AdditiveAttribute> additiveAttributes){
+				Asset asset, String description, ArrayList<AdditiveAttribute> additiveAttributes){
 			this.setPrefabID(ID);  
 			this.setCategory(categoryID);
 			this.setTiledWidth(tiledWidth);
 			this.setTiledHeight(tiledHeight);
-			this.setAsset(assetName);
+			this.setAsset(asset);
 			this.setDesctiption(description);
 			this.setAdditiveAttributes(additiveAttributes);
 		}
-
-		public String getTextureAddress() {
-			return textureAddress;
+		
+		public String getAtlasName() {
+			return asset.getAtlas().getName();
 		}
 		
-		public String getTextureName() {
-			return textureAddress.substring(textureAddress.lastIndexOf('/')+1);
+		public String getAssetName() {
+			return asset.getAssetName();
 		}
 		
 		public BufferedImage getTexture() {

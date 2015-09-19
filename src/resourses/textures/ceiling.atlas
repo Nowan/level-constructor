@@ -4,21 +4,21 @@ size: 512,512
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
-clg-01
+ceiling-01
   rotate: false
   xy: 2, 195
   size: 386, 276
   orig: 386, 276
   offset: 0, 0
   index: -1
-clg-02
+ceiling-02
   rotate: false
   xy: 2, 98
   size: 384, 95
   orig: 384, 95
   offset: 0, 0
   index: -1
-clg-03
+ceiling-03
   rotate: false
   xy: 2, 2
   size: 284, 94
