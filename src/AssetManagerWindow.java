@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -250,6 +251,12 @@ public class AssetManagerWindow extends JDialog{
 		removeAssetJB.setFont(Globals.DEFAULT_FONT);
 		removeAssetJB.setPreferredSize(new Dimension(150,34));
 		removeAssetJB.setContentAreaFilled(false);
+		removeAssetJB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				onRemoveAssetClicked();
+			}
+		});
 		assetManagementJP.add(removeAssetJB);
 		
 		addAssetJP = new JPanel();
@@ -383,7 +390,12 @@ public class AssetManagerWindow extends JDialog{
 		previewsJP.removeAll();
 		int newHeight=0;
 		//TODO passing through assets of current atlas
-		
+		Atlas selectedAtlas = GOBase.atlasesBase.get(atlasBaseJCB.getSelectedItem().toString());
+		System.out.println("!!!"+selectedAtlas.getName());
+		for(Asset a:selectedAtlas.getAssets()){
+			previewsJP.add(new AssetPreview(a));
+			newHeight+=AssetPreview.HEIGHT;
+		}
 		
 		JButton addAssetJB = new JButton("+");
 		addAssetJB.setFont(Globals.INDEX_FONT);
@@ -453,6 +465,26 @@ public class AssetManagerWindow extends JDialog{
 			atlasBaseModel.addElement(a.getName());
 	}
 	
+	private void onRemoveAssetClicked(){
+		new JOptionPane();
+		int n = JOptionPane.showConfirmDialog(
+			  	ConstructorWindow.instance,
+			    "Are you sure you want to delete this asset? There may be objects that use it",
+			    "Message",
+			    JOptionPane.YES_NO_OPTION);
+		if(n==0)
+			try{
+				//TODO getting address
+				String textureAddress = "";
+				Files.delete(Paths.get(textureAddress));
+				rebuildAtlas();
+				onAtlasChanged();
+			}
+			catch(IOException ex){
+				System.out.println(ex.getStackTrace());
+			}
+	}
+	
 	private void onConfirmClicked(){
 		
 		//copy texture image to the textures folder
@@ -468,7 +500,6 @@ public class AssetManagerWindow extends JDialog{
 		if (directoryListing != null) 
 			for (File child : directoryListing) {
 				if(child.getName().endsWith(".png")){
-					//System.out.println(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
 					int indx = Integer.valueOf(child.getName().toString().substring(child.getName().length()-6, child.getName().length()-4));
 					if(indx>lastIndex)
 						lastIndex=indx;
@@ -497,100 +528,59 @@ public class AssetManagerWindow extends JDialog{
 		setInsertionMode(false);
 	}
 	
-	private class AssetPreview extends PreviewPanel implements MouseListener{
+	private class AssetPreview extends JPanel implements MouseListener{
 		private static final long serialVersionUID = -701096237525672995L;
-		private JButton removeJB;
-		private JButton chooseJB;
-		
+
 		public static final int WIDTH = 140;
 		public static final int HEIGHT = 120;
 		
-		private BufferedImage texture;
 		private String textureAddress;
 		private String textureName;
 		
-		public AssetPreview(File file){
+		private PreviewPanel mainPreview;
+		
+		public AssetPreview(Asset asset){
 			super();
-			setPreferredSize(new Dimension(WIDTH,HEIGHT));
-			setSize(getPreferredSize());
-			
-			try{
-				texture = ImageIO.read(file);
-				textureName = file.getName();
-				textureAddress = file.getPath();
-			}
-			catch(IOException ex){
-				System.out.println(ex.getMessage());
-			}
-			setImage(texture);
-			addMouseListener(this);
-			
+			int extendedHeight = asset.hasAnimation() ? 50 : 0;
+			setPreferredSize(new Dimension(142,122+extendedHeight));
+			setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			SpringLayout slayout = new SpringLayout();
 			setLayout(slayout);
 			
-			removeJB = new JButton("✗");
-			removeJB.setPreferredSize(new Dimension(20,20));
-			removeJB.setMargin(new Insets(0,0,0,0));
-			removeJB.setFont(Globals.PARAMETER_FONT);
-			removeJB.setForeground(Color.WHITE);
-			removeJB.setBackground(Color.BLACK);
-			removeJB.setToolTipText("Delete Asset");
-			removeJB.setVisible(false);
-			removeJB.addMouseListener(this);
-			removeJB.addMouseListener(new MouseListener(){
-				@Override public void mouseClicked(MouseEvent arg0) {}
-
-				@Override public void mouseEntered(MouseEvent arg0) {}
-
-				@Override public void mouseExited(MouseEvent arg0) {}
-
-				@Override
-				public void mousePressed(MouseEvent arg0) {
-					new JOptionPane();
-					int n = JOptionPane.showConfirmDialog(
-						  	ConstructorWindow.instance,
-						    "Are you sure you want to delete this asset? There may be objects that use it",
-						    "Message",
-						    JOptionPane.YES_NO_OPTION);
-					if(n==0)
-						try{
-							Files.delete(Paths.get(textureAddress));
-							rebuildAtlas();
-							onAtlasChanged();
-						}
-						catch(IOException ex){
-							System.out.println(ex.getStackTrace());
-						}
-				}
-
-				@Override public void mouseReleased(MouseEvent arg0) {}
-			});
+			mainPreview = new PreviewPanel();
+			mainPreview.setPreferredSize(new Dimension(140,120));
+			mainPreview.setSize(getPreferredSize());
+			mainPreview.setImage(asset.getAssetTexture());
+			addMouseListener(this);
 			
-			chooseJB = new JButton("✔");
-			chooseJB.setPreferredSize(new Dimension(20,20));
-			chooseJB.setMargin(new Insets(0,0,0,0));
-			chooseJB.setFont(Globals.PARAMETER_FONT);
-			chooseJB.setForeground(Color.WHITE);
-			chooseJB.setBackground(Color.BLACK);
-			chooseJB.setVisible(false);
-			chooseJB.addMouseListener(this);
-			chooseJB.addMouseListener(new MouseListener(){
-				@Override public void mouseClicked(MouseEvent arg0) {}
-				@Override public void mouseEntered(MouseEvent arg0) {}
-				@Override public void mouseExited(MouseEvent arg0) {}
-				@Override public void mouseReleased(MouseEvent arg0) {}
-				@Override
-				public void mousePressed(MouseEvent arg0) {
-					linkToAssetManager.selectedTexture = textureName;
-					linkToAssetManager.dispose();
+			slayout.putConstraint(SpringLayout.NORTH, mainPreview, 0, SpringLayout.NORTH, this);
+			slayout.putConstraint(SpringLayout.HORIZONTAL_CENTER, mainPreview, 0, SpringLayout.HORIZONTAL_CENTER, this);
+			add(mainPreview);
+			if(asset.hasAnimation()){
+				
+				JPanel framePreviewJP = new JPanel();
+				framePreviewJP.setPreferredSize(new Dimension(200,50));
+				framePreviewJP.setLayout(new FlowLayout(FlowLayout.LEADING, 0, 0));
+				framePreviewJP.setBackground(Color.BLACK);
+				framePreviewJP.addMouseListener(this);
+				
+				JScrollPane framePreviewJSP = new JScrollPane(framePreviewJP);
+				framePreviewJSP.setPreferredSize(new Dimension(140,50));
+				framePreviewJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+				framePreviewJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+				framePreviewJSP.setBorder(BorderFactory.createEmptyBorder());
+				for(BufferedImage bi : asset.getFrameTextures()){
+					PreviewPanel framePreview = new PreviewPanel();
+					framePreview.setPreferredSize(new Dimension(50,50));
+					framePreview.setSize(getPreferredSize());
+					framePreview.setImage(bi);
+					framePreviewJP.add(framePreview);
 				}
-			});
-			
-			slayout.putConstraint(SpringLayout.SOUTH, chooseJB, 0, SpringLayout.SOUTH, this);
-			slayout.putConstraint(SpringLayout.EAST, chooseJB, 0, SpringLayout.EAST, this);
-			add(chooseJB);
-			slayout.putConstraint(SpringLayout.EAST, removeJB, 0, SpringLayout.EAST, this);
-			add(removeJB);
+				
+				slayout.putConstraint(SpringLayout.NORTH, framePreviewJSP, 0, SpringLayout.SOUTH, mainPreview);
+				slayout.putConstraint(SpringLayout.HORIZONTAL_CENTER, framePreviewJSP, 0, SpringLayout.HORIZONTAL_CENTER, this);
+				add(framePreviewJSP);
+			}
 		}
 
 		@Override
@@ -598,16 +588,12 @@ public class AssetManagerWindow extends JDialog{
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
-			chooseJB.setVisible(chooseMode);
-			removeJB.setVisible(true);
 			setBorder(BorderFactory.createLineBorder(Color.GRAY));
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
-			chooseJB.setVisible(false);
-			removeJB.setVisible(false);
-			setBorder(BorderFactory.createEmptyBorder());
+			setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		}
 
 		@Override

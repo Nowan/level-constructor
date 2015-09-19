@@ -362,7 +362,6 @@ public class XMLConverter {
 			for (int temp = 0; temp < atlasNList.getLength(); temp++) {
 				Node atlasNode = atlasNList.item(temp);
 				if (atlasNode.getNodeType() == Node.ELEMENT_NODE) {
-					
 					Element atlasElement = (Element) atlasNode;
 					
 					String atlasName = atlasElement.getAttribute("name");
@@ -379,15 +378,15 @@ public class XMLConverter {
 							Asset asset = new Asset(atlas,assetName);
 							
 							ArrayList<String> animationFrames = new ArrayList<String>();
-							NodeList frameNList = atlasElement.getElementsByTagName("frame");
+							NodeList frameNList = assetElement.getElementsByTagName("frame");
 							for(int f=0;f<frameNList.getLength();f++){
-								Node frameNode = frameNList.item(i);
+								Node frameNode = frameNList.item(f);
 								if (frameNode.getNodeType() == Node.ELEMENT_NODE) {
-									Element frameElement = (Element) assetNode;
-									animationFrames.add(frameElement.getNodeValue());
+									Element frameElement = (Element) frameNode;
+									animationFrames.add(frameElement.getAttribute("texture"));
 								}
 							}
-							asset.setAnimationFrames(animationFrames);
+							asset.setFrames(animationFrames);
 							atlas.getAssets().add(asset);
 						}
 					}
@@ -417,9 +416,9 @@ public class XMLConverter {
 				for(Asset ast : atl.getAssets()){
 					Element assetElement = doc.createElement("asset");
 					assetElement.setAttribute("name", ast.getAssetName());
-					for(String s2 : ast.getAnimationFrames()){
+					for(String s2 : ast.getFrameNames()){
 						Element frameElement = doc.createElement("frame");
-						frameElement.setNodeValue(s2);
+						frameElement.setAttribute("texture", s2);
 						assetElement.appendChild(frameElement);
 					}
 					atlasElement.appendChild(assetElement);

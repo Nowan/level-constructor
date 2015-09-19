@@ -9,12 +9,14 @@ public class Asset {
 
 	private Atlas atlas;
 	private String assetName;
-	private ArrayList<String> animationFrames;
+	private ArrayList<String> frameNames;
+	private ArrayList<BufferedImage> frameTextures;
 	private BufferedImage assetTexture;
 	
 	public Asset(Atlas atlas, String assetName){
 		this.atlas = atlas;
 		this.assetName = assetName;
+		this.frameTextures = new ArrayList<BufferedImage>();
 		String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+assetName+".png";
 		try{
 			this.setAssetTexture(ImageIO.read(new File(textureAddress)));
@@ -32,16 +34,34 @@ public class Asset {
 		this.assetName = assetName;
 	}
 
-	public ArrayList<String> getAnimationFrames() {
-		return animationFrames;
-	}
-
-	public void setAnimationFrames(ArrayList<String> animationFrames) {
-		this.animationFrames = animationFrames;
+	public ArrayList<String> getFrameNames() {
+		return frameNames;
 	}
 	
-	public boolean isAnimated(){
-		return animationFrames.size()>0;
+	public void setFrames(ArrayList<String> animationFrames) {
+		setFrameNames(animationFrames);
+		for(int i=0;i<animationFrames.size();i++){
+			try{
+				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+animationFrames.get(i)+".png";
+				System.out.println("!"+textureAddress);
+				frameTextures.add(ImageIO.read(new File(textureAddress)));
+			}
+			catch(IOException ex){
+				System.out.println(ex.getMessage());
+			}
+		}
+	}
+
+	public void setFrameNames(ArrayList<String> frameNames) {
+		this.frameNames = frameNames;
+	}
+	
+	public ArrayList<BufferedImage> getFrameTextures() {
+		return frameTextures;
+	}
+	
+	public boolean hasAnimation(){
+		return frameNames.size()>0;
 	}
 
 	public BufferedImage getAssetTexture() {

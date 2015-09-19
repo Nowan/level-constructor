@@ -1,1 +1,19 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><assetsbase><atlas name="ceiling"><asset name="clg-01"/><asset name="clg-02"/><asset name="clg-03"/></atlas><atlas name="floor"><asset name="flr-01"/></atlas><atlas name="usual_door"><asset name="udr-01"/><asset name="udr-02"/></atlas></assetsbase>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<assetsbase>
+<atlas name="ceiling">
+	<asset name="clg-01"/>
+	<asset name="clg-02"/>
+	<asset name="clg-03"/>
+</atlas>
+<atlas name="floor">
+	<asset name="flr-01">
+		<frame texture="flr-01_02" />
+<frame texture="flr-01_02" />
+<frame texture="flr-01_02" />
+	</asset>
+</atlas>
+<atlas name="usual_door">
+	<asset name="udr-01"/>
+	<asset name="udr-02"/>
+</atlas>
+</assetsbase>
