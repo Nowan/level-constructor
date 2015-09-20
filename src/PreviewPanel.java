@@ -43,6 +43,7 @@ public class PreviewPanel extends JPanel{
 		Graphics2D g = resizedImage.createGraphics();
 		
 		float scaleFactor = (float)((this.getPreferredSize().width+ this.getPreferredSize().height)/2)/Math.max(originalImage.getWidth(), originalImage.getHeight());
+		scaleFactor = Math.min(1.0f, scaleFactor);
 		int resizedWidth = (int)(originalImage.getWidth()*scaleFactor);
 		int resizedHeight = (int)(originalImage.getHeight()*scaleFactor);
 		int posX = this.getPreferredSize().width/2 - resizedWidth/2;

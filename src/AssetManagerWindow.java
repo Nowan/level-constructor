@@ -71,6 +71,9 @@ public class AssetManagerWindow extends JDialog{
 	//asset, selected in AssetManager and which is displayed in detailed preview panel
 	private Asset selectedAsset;
 	private AssetPreview selectedAssetPreview;
+	private FramePreview selectedFrame;
+	//frame panel, which user drags to a new place
+	private FramePreview draggedFrame;
 	
 	private JFileChooser fileChooser;
 	
@@ -135,7 +138,7 @@ public class AssetManagerWindow extends JDialog{
 		previewsJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		previewsJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-		atlasBaseModel = new DefaultComboBoxModel(GOBase.atlasesBase.getNamesArray());
+		atlasBaseModel = new DefaultComboBoxModel<String>(GOBase.atlasesBase.getNamesArray());
 		
 		atlasBaseJCB = new JComboBox<String>(atlasBaseModel);
 		atlasBaseJCB.setFont(Globals.DEFAULT_FONT);
@@ -158,8 +161,9 @@ public class AssetManagerWindow extends JDialog{
 		detailedMainPreview.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-5,300));
 		
 		assetPartsJP = new JPanel();
-		assetPartsJP.setPreferredSize(new Dimension(600,100));
+		assetPartsJP.setPreferredSize(new Dimension(100,100));
 		assetPartsJP.setBackground(Color.BLACK);
+		assetPartsJP.setLayout(new FlowLayout(FlowLayout.LEADING, 0, 0));
 		
 		JScrollPane assetPartsJSP = new JScrollPane(assetPartsJP);
 		assetPartsJSP.setPreferredSize(new Dimension(detailedPreviewJP.getPreferredSize().width-4,120));
@@ -386,6 +390,7 @@ public class AssetManagerWindow extends JDialog{
 	}
 	
 	private void onAtlasChanged(){
+		if(atlasBaseJCB.getSelectedItem()==null) return;
 		previewsJP.removeAll();
 		int newHeight=0;
 		Atlas selectedAtlas = GOBase.atlasesBase.get(atlasBaseJCB.getSelectedItem().toString());
@@ -405,10 +410,12 @@ public class AssetManagerWindow extends JDialog{
 		addAssetJB.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				addAssetJP.setBorder(BorderFactory.createTitledBorder("Create new asset"));
 				selectedAsset=null;
 				if(selectedAssetPreview!=null)
 				selectedAssetPreview.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 				selectedAssetPreview=null;
+				selectedFrame = null;
 				setDetailedPreview(null);
 				detailedMainPreview.setBackground(Color.DARK_GRAY);
 				assetPartsJP.setBackground(Color.GRAY);
@@ -424,7 +431,6 @@ public class AssetManagerWindow extends JDialog{
 	}
 	
 	private void setDetailedPreview(Asset asset){
-		//TODO
 		assetPartsJP.removeAll();
 		if(asset==null){
 			detailedMainPreview.hideImage();
@@ -432,14 +438,34 @@ public class AssetManagerWindow extends JDialog{
 			assetPartsJP.repaint();
 			return;
 		}
+		
+		int newWidth = 0;
 		detailedMainPreview.setImage(asset.getAssetTexture());
-		for(BufferedImage bi : asset.getFrameTextures()){
-			PreviewPanel framePreview = new PreviewPanel();
-			framePreview.setPreferredSize(new Dimension(100,100));
-			framePreview.setSize(framePreview.getPreferredSize());
-			framePreview.setImage(bi);
+		for(int i=0;i<asset.getFrames().size();i++){
+			FramePreview framePreview = new FramePreview(asset.getFrameName(i),asset.getFrameTexture(i));
 			assetPartsJP.add(framePreview);
+			newWidth+=framePreview.getPreferredSize().width;
 		}
+		
+		if(selectedAsset==asset){
+			JButton addAssetJB = new JButton("+");
+			addAssetJB.setFont(Globals.INDEX_FONT);
+			addAssetJB.setMargin(new Insets(0,0,0,0));
+			addAssetJB.setPreferredSize(new Dimension(40,40));
+			addAssetJB.setContentAreaFilled(false);
+			addAssetJB.setForeground(Color.WHITE);
+			addAssetJB.setToolTipText("Add new Asset");
+			addAssetJB.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					addAssetJP.setBorder(BorderFactory.createTitledBorder("Create new frame"));
+					setInsertionMode(true);
+				}
+			});
+			assetPartsJP.add(addAssetJB);
+			newWidth+=addAssetJB.getPreferredSize().width;
+		}
+		assetPartsJP.setPreferredSize(new Dimension(newWidth,140));
 		assetPartsJP.revalidate();
 		assetPartsJP.repaint();
 	}
@@ -466,9 +492,8 @@ public class AssetManagerWindow extends JDialog{
 		new File(Globals.TEXTURES_FOLDER+atlasName.getText()).mkdirs();
 		
 		GOBase.atlasesBase.add(new Atlas(newAtlasName));
-		Globals.xmlConverter.saveAtlasesBase();
 		
-		JOptionPane.showMessageDialog(this, "Atlas successfully created!");
+		Globals.xmlConverter.saveAtlasesBase();
 		
 		atlasName.setText("");
 		createAtlasJB.setEnabled(false);
@@ -499,16 +524,34 @@ public class AssetManagerWindow extends JDialog{
 			    JOptionPane.YES_NO_OPTION);
 		if(n==0)
 			try{
-				//TODO getting address
 				Atlas atlas = selectedAsset.getAtlas();
-				String textureAddress =Globals.TEXTURES_FOLDER+atlas.getName()+"/"+selectedAsset.getAssetName()+".png";
+				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/";
+				//if Frame was selected, remove frame instead of asset
+				if(selectedFrame!=null){
+					textureAddress += selectedFrame.frameName+".png";
+					for(int i=0;i<selectedAsset.getFrames().size();i++)
+						if(selectedAsset.getFrameName(i).equals(selectedFrame.frameName)){
+							selectedAsset.getFrames().remove(i);
+						}
+				}
+				else{//else - remove asset
+					textureAddress += selectedAsset.getAssetName()+".png";
+					atlas.getAssets().remove(selectedAsset);
+					GOBase.assetsBase.refresh();
+				}
 				Files.delete(Paths.get(textureAddress));
 				//save changes to assetsbase.xml
-				atlas.getAssets().remove(selectedAsset);
-				GOBase.assetsBase.refresh();
 				Globals.xmlConverter.saveAtlasesBase();
-				rebuildAtlas();
-				onAtlasChanged();
+				if(selectedFrame!=null)
+					setDetailedPreview(selectedAsset);
+				else{
+					setDetailedPreview(null);
+					rebuildAtlas();
+					onAtlasChanged();
+				}
+				selectedFrame=null;
+				selectedAsset = null;
+				selectedAssetPreview = null;
 			}
 			catch(IOException ex){
 				System.out.println(ex.getStackTrace());
@@ -516,28 +559,37 @@ public class AssetManagerWindow extends JDialog{
 	}
 	
 	private void onConfirmClicked(){
-		
 		//copy texture image to the textures folder
 		String textureAddress = textureAddressJTF.getText();
 		
 		Atlas atlas = GOBase.atlasesBase.get(atlasBaseJCB.getSelectedItem().toString());
 		
 		//generating texture name in form "atlasname-assetindex_frameindex.png"
-		int freeIndex = 0;
-		
+		int freeAssetIndex = 0;
+		int lastFrameIndex=0;
+		String generatedAssetName = atlas.getName()+"-";
+		//if no asset is selected, create new asset
+		if(selectedAsset==null){
 		for(Asset a : atlas.getAssets()){
 			int assetIndex = Integer.valueOf(a.getAssetName().substring(atlas.getName().length()+1, atlas.getName().length()+3));
-			if(freeIndex!=assetIndex)
+			if(freeAssetIndex!=assetIndex)
 				break;
 			else
-				freeIndex++;
+				freeAssetIndex++;
+			}
+		generatedAssetName+=String.format("%02d", freeAssetIndex);
+		}//else, create new frame of chosen asset
+		else{
+			String assetIndex = selectedAsset.getAssetName().substring(atlas.getName().length()+1, atlas.getName().length()+3);
+			for(int i=0;i<selectedAsset.getFrames().size();i++){
+				int frameIndex =  Integer.valueOf(selectedAsset.getFrameName(i).substring(selectedAsset.getFrameName(i).length()-2));
+				if(lastFrameIndex<frameIndex)
+					lastFrameIndex=frameIndex;
+			}
+			generatedAssetName+=assetIndex+"_"+String.format("%02d", lastFrameIndex+1);
 		}
 		
-		if(this.selectedAsset!=null){
-			
-		}
-		
-		String generatedAssetName = atlas.getName()+"-"+String.format("%02d", freeIndex);
+		System.out.println(generatedAssetName);
 		String targetAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+generatedAssetName+textureAddress.substring(textureAddress.lastIndexOf('.'));
 		
 		if(!textureAddress.equals(targetAddress))
@@ -548,13 +600,20 @@ public class AssetManagerWindow extends JDialog{
 				System.out.println(ex.getMessage());
 			}
 		
+		//add new asset to runtime object base
+		if(selectedAsset!=null)
+			selectedAsset.addFrame(generatedAssetName);
+		else
+			atlas.getAssets().add(new Asset(atlas,generatedAssetName));
+		
 		//save changes to assetsbase.xml
-		atlas.getAssets().add(new Asset(atlas,generatedAssetName));
-		GOBase.assetsBase.refresh();
 		Globals.xmlConverter.saveAtlasesBase();
 		onAtlasChanged();
 		rebuildAtlas();
 		onDiscardClicked();
+		if(selectedAsset!=null)
+			setDetailedPreview(selectedAsset);
+		confirmJB.setEnabled(false);
 	}
 	
 	private void onDiscardClicked(){
@@ -609,11 +668,11 @@ public class AssetManagerWindow extends JDialog{
 				framePreviewJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 				framePreviewJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 				framePreviewJSP.setBorder(BorderFactory.createEmptyBorder());
-				for(BufferedImage bi : asset.getFrameTextures()){
+				for(int i=0;i<asset.getFrames().size();i++){
 					PreviewPanel framePreview = new PreviewPanel();
 					framePreview.setPreferredSize(new Dimension(50,50));
 					framePreview.setSize(getPreferredSize());
-					framePreview.setImage(bi);
+					framePreview.setImage(asset.getFrameTexture(i));
 					framePreviewJP.add(framePreview);
 				}
 				
@@ -629,17 +688,18 @@ public class AssetManagerWindow extends JDialog{
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
 			if(insertionMode) return;
-			if(linkToAssetManager.selectedAsset!=asset)
+			if(selectedAsset!=asset){
 				setBorder(BorderFactory.createLineBorder(Color.GRAY));
-			setDetailedPreview(asset);
+				setDetailedPreview(asset);
+			}
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
 			if(insertionMode) return;
-			if(linkToAssetManager.selectedAsset!=asset){
+			if(selectedAsset!=asset){
 				setBorder(BorderFactory.createLineBorder(Color.BLACK));
-				setDetailedPreview(linkToAssetManager.selectedAsset);
+				setDetailedPreview(selectedAsset);
 			}
 		}
 
@@ -666,23 +726,102 @@ public class AssetManagerWindow extends JDialog{
 
 		public void setSelected(boolean flag){
 			if(flag){
-				linkToAssetManager.removeAssetJB.setEnabled(true);
-				linkToAssetManager.selectAssetJB.setEnabled(chooseMode);
+				removeAssetJB.setEnabled(true);
+				selectAssetJB.setEnabled(chooseMode);
 				selectedAssetPreview = this;
-				linkToAssetManager.selectedAsset = asset;
+				selectedAsset = asset;
+				if(selectedFrame!=null)
+					selectedFrame.setSelected(false);
+				setDetailedPreview(asset);
 				setBorder(BorderFactory.createLineBorder(Color.GRAY,2));
 			}
 			else{
 				selectedAssetPreview = null;
-				linkToAssetManager.selectedAsset = null;
-				linkToAssetManager.removeAssetJB.setEnabled(false);
-				linkToAssetManager.selectAssetJB.setEnabled(false);
+				selectedAsset = null;
+				if(selectedFrame!=null)
+					selectedFrame.setSelected(false);
+				setDetailedPreview(asset);
+				removeAssetJB.setEnabled(false);
+				selectAssetJB.setEnabled(false);
 			}
 		}
 		
 		@Override
 		public void mouseReleased(MouseEvent arg0) {}
+	}
+	
+	private class FramePreview extends PreviewPanel implements MouseListener{
 
+		private static final long serialVersionUID = -4884779928697750194L;
+
+		public String frameName;
+		
+		public BufferedImage frameTexture;
+		
+		public FramePreview(String frameName, BufferedImage frameTexture){
+			super();
+			this.frameName = frameName;
+			this.frameTexture = frameTexture;
+			setPreferredSize(new Dimension(100,100));
+			setSize(getPreferredSize());
+			setImage(frameTexture);
+			addMouseListener(this);
+			if(selectedFrame!=null&&selectedFrame.frameName.equals(frameName))
+				setSelected(true);
+		}
+		
+		private void setSelected(boolean flag){
+			if(flag){
+				selectedFrame = this;
+				setBorder(BorderFactory.createLineBorder(Color.GRAY,2));
+				detailedMainPreview.setImage(frameTexture);
+				removeAssetJB.setText("✗     Remove frame");
+			}
+			else{
+				selectedFrame = null;
+				setBorder(BorderFactory.createEmptyBorder());
+				removeAssetJB.setText("✗     Remove asset");
+			}
+		}
+		
+		@Override
+		public void mouseClicked(MouseEvent arg0) {}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			if(selectedFrame!=this){
+				setBorder(BorderFactory.createLineBorder(Color.GRAY));
+				detailedMainPreview.setImage(frameTexture);
+			}
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			if(selectedFrame!=this){
+				setBorder(BorderFactory.createEmptyBorder());
+				if(selectedFrame==null)
+					detailedMainPreview.setImage(selectedAsset.getAssetTexture());
+				else
+					detailedMainPreview.setImage(selectedFrame.frameTexture);
+			}
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			if(selectedFrame!=null){
+				if(selectedFrame!=this){
+					selectedFrame.setBorder(BorderFactory.createEmptyBorder());
+					setSelected(true);
+				}
+				else
+					setSelected(false);
+			}
+			else
+				setSelected(true);
+		}
+		
+		@Override
+		public void mouseReleased(MouseEvent e) {}
 	}
 	
 }

@@ -1,6 +1,7 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
@@ -9,15 +10,13 @@ public class Asset {
 
 	private Atlas atlas;
 	private String assetName;
-	private ArrayList<String> frameNames;
-	private ArrayList<BufferedImage> frameTextures;
+	private ArrayList<Frame> frames;
 	private BufferedImage assetTexture;
 	
 	public Asset(Atlas atlas, String assetName){
 		this.atlas = atlas;
 		this.assetName = assetName;
-		this.frameNames = new ArrayList<String>();
-		this.frameTextures = new ArrayList<BufferedImage>();
+		this.frames = new ArrayList<Frame>();
 		String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+assetName+".png";
 		try{
 			this.setAssetTexture(ImageIO.read(new File(textureAddress)));
@@ -35,33 +34,15 @@ public class Asset {
 		this.assetName = assetName;
 	}
 
-	public ArrayList<String> getFrameNames() {
-		return frameNames;
-	}
 	
 	public void setFrames(ArrayList<String> animationFrames) {
-		setFrameNames(animationFrames);
 		for(int i=0;i<animationFrames.size();i++){
-			try{
-				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+animationFrames.get(i)+".png";
-				frameTextures.add(ImageIO.read(new File(textureAddress)));
-			}
-			catch(IOException ex){
-				System.out.println(ex.getMessage());
-			}
+			frames.add(new Frame(animationFrames.get(i)));
 		}
 	}
-
-	public void setFrameNames(ArrayList<String> frameNames) {
-		this.frameNames = frameNames;
-	}
 	
-	public ArrayList<BufferedImage> getFrameTextures() {
-		return frameTextures;
-	}
-	
-	public boolean hasAnimation(){
-		return frameNames.size()>0;
+	public ArrayList<Frame> getFrames() {
+		return this.frames;
 	}
 
 	public BufferedImage getAssetTexture() {
@@ -75,5 +56,56 @@ public class Asset {
 	public Atlas getAtlas() {
 		return atlas;
 	}
+	
+	public void addFrame(String frameName){
+		frames.add(new Frame(frameName));
+	}
 
+	public BufferedImage getFrameTexture(int index) {
+		return frames.get(index).getFrameTexture();
+	}
+	
+	public String getFrameName(int index) {
+		return frames.get(index).getFrameName();
+	}
+	
+	public boolean hasAnimation() {
+		return frames.size()>0;
+	}
+
+	public class Frame{
+	
+		private String frameName;
+		
+		private BufferedImage frameTexture;
+		
+		public Frame(String frameName){
+			this.setFrameName(frameName);
+			try{
+				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+frameName+".png";
+				System.out.println("- "+textureAddress);
+				this.setFrameTexture(ImageIO.read(new File(textureAddress)));
+			}
+			catch(IOException ex){
+				System.out.println(ex.getMessage());
+			}
+		}
+
+		public String getFrameName() {
+			return frameName;
+		}
+
+		public void setFrameName(String frameName) {
+			this.frameName = frameName;
+		}
+
+		public BufferedImage getFrameTexture() {
+			return frameTexture;
+		}
+
+		public void setFrameTexture(BufferedImage frameTexture) {
+			this.frameTexture = frameTexture;
+		}
+	}
+	
 }

@@ -417,9 +417,9 @@ public class XMLConverter {
 				for(Asset ast : atl.getAssets()){
 					Element assetElement = doc.createElement("asset");
 					assetElement.setAttribute("name", ast.getAssetName());
-					for(String s2 : ast.getFrameNames()){
+					for(int i=0;i<ast.getFrames().size();i++){
 						Element frameElement = doc.createElement("frame");
-						frameElement.setAttribute("texture", s2);
+						frameElement.setAttribute("texture", ast.getFrameName(i));
 						assetElement.appendChild(frameElement);
 					}
 					atlasElement.appendChild(assetElement);
