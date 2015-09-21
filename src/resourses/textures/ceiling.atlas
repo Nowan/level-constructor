@@ -11,13 +11,6 @@ ceiling-01
   orig: 386, 276
   offset: 0, 0
   index: -1
-ceiling-01
-  rotate: false
-  xy: 2, 195
-  size: 386, 276
-  orig: 386, 276
-  offset: 0, 0
-  index: 1
 ceiling-02
   rotate: false
   xy: 2, 98

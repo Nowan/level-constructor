@@ -1,7 +1,9 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -59,13 +61,14 @@ public class PrefabManagerWindow  extends JDialog{
 		super(ConstructorWindow.instance, "Prefab manager");
 		editPrefab=null;
 		this.setModal(true);
-		setSize(303,570);
+		setSize(973,570);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(ConstructorWindow.instance);
 		setLayout(new BorderLayout());
 		setResizable(false);
 		
-		add(generateNewPrefabContent());
+		setContentPane(generateContent());
+		
 		indexJTF.setText(generatePrefabIndex());
 		setVisible(true);
 	}
@@ -80,8 +83,9 @@ public class PrefabManagerWindow  extends JDialog{
 		setLayout(new BorderLayout());
 		setResizable(false);
 		
-		add(generateNewPrefabContent());
+		setContentPane(generateContent());
 		
+		//filling form with data taken from the paremeter
 		for(int i=0; i<GOBase.prefabCategoryBase.size();i++)
 			if(GOBase.prefabCategoryBase.get(i).getID().equals(editPrefab.getCategoryID())){
 				categoryJCB.setSelectedIndex(i);
@@ -108,9 +112,22 @@ public class PrefabManagerWindow  extends JDialog{
 		setVisible(true);
 	}
 	
-	private JPanel generateNewPrefabContent(){
+	private JPanel generateContent(){
+		JPanel panel = new JPanel();
+		SpringLayout slayout = new SpringLayout();
+		panel.setLayout(slayout);
+		
+		JPanel parametersForm = generateParametersForm();
+		JPanel textureMakerForm = generateTextureMakerForm();
+		panel.add(parametersForm);
+		slayout.putConstraint(SpringLayout.WEST, textureMakerForm, 0, SpringLayout.EAST, parametersForm);
+		panel.add(textureMakerForm);
+		return panel;
+	}
+	
+	private JPanel generateParametersForm(){
 		JPanel prefabParametersJP = new JPanel();
-		prefabParametersJP.setPreferredSize(new Dimension(this.getWidth(),270));
+		prefabParametersJP.setPreferredSize(new Dimension(300,getHeight()-28));
 		SpringLayout slayout2 = new SpringLayout();
 		prefabParametersJP.setLayout(slayout2);
 		
@@ -320,6 +337,55 @@ public class PrefabManagerWindow  extends JDialog{
 		return prefabParametersJP;
 	}
 	
+	private JPanel generateTextureMakerForm(){
+		JPanel panel = new JPanel();
+		panel.setPreferredSize(new Dimension(669,getHeight()-28));
+		panel.setBorder(BorderFactory.createLoweredBevelBorder());
+		SpringLayout slayout = new SpringLayout();
+		panel.setLayout(slayout);
+		
+		TMCanvas tmCanvas = new TMCanvas();
+		tmCanvas.setPreferredSize(new Dimension(495,panel.getPreferredSize().height));
+		
+		JPanel texturePartsPreviewJP = new JPanel();
+		texturePartsPreviewJP.setPreferredSize(new Dimension(150,300));
+		texturePartsPreviewJP.setBackground(Color.BLACK);
+		
+		JScrollPane texturePartsPreviewJSP = new JScrollPane(texturePartsPreviewJP);
+		texturePartsPreviewJSP.setPreferredSize(new Dimension(170,475));
+		texturePartsPreviewJSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		texturePartsPreviewJSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		
+		JPanel textureOptionsJP = new JPanel();
+		textureOptionsJP.setPreferredSize(new Dimension(170,67));
+		textureOptionsJP.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+		textureOptionsJP.setBackground(Color.BLACK);
+		textureOptionsJP.setLayout(new FlowLayout(FlowLayout.LEFT,5,5));
+		
+		JCheckBox verticalReflectionJChB = new JCheckBox("  vertical reflection");
+		verticalReflectionJChB.setFont(Globals.PARAMETER_FONT);
+		verticalReflectionJChB.setForeground(Color.WHITE);
+		verticalReflectionJChB.setContentAreaFilled(false);
+		verticalReflectionJChB.setEnabled(false);
+		textureOptionsJP.add(verticalReflectionJChB);
+		
+		JCheckBox horisontalReflectionJChB = new JCheckBox("  horisontal reflection");
+		horisontalReflectionJChB.setFont(Globals.PARAMETER_FONT);
+		horisontalReflectionJChB.setForeground(Color.WHITE);
+		horisontalReflectionJChB.setContentAreaFilled(false);
+		horisontalReflectionJChB.setEnabled(false);
+		textureOptionsJP.add(horisontalReflectionJChB);
+		
+		panel.add(tmCanvas);
+		slayout.putConstraint(SpringLayout.EAST, texturePartsPreviewJSP, 0, SpringLayout.EAST, panel);
+		panel.add(texturePartsPreviewJSP);
+		slayout.putConstraint(SpringLayout.NORTH, textureOptionsJP, -1, SpringLayout.SOUTH, texturePartsPreviewJSP);
+		slayout.putConstraint(SpringLayout.HORIZONTAL_CENTER, textureOptionsJP, 0, SpringLayout.HORIZONTAL_CENTER, texturePartsPreviewJSP);
+		panel.add(textureOptionsJP);
+		
+		return panel;
+	}
+	
 	private void setAdditiveAttributes(String categoryName){
 		additiveAttributesPanel.removeAll();
 		
@@ -488,6 +554,20 @@ public class PrefabManagerWindow  extends JDialog{
 			ConstructorWindow.instance.collectionsPanel.tilesTab.refreshPrefabPanel();
 			mainLink.dispose();
 		
+	}
+	
+	private class TMCanvas extends JPanel{
+		
+		public TMCanvas(){
+			super();
+			setBackground(Color.BLACK);
+			
+		}
+		
+		@Override
+		public void paint(Graphics g){
+			super.paint(g);
+		}
 	}
 
 }
