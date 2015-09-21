@@ -1,14 +1,22 @@
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -31,7 +39,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import com.badlogic.gdx.math.MathUtils;
 
 public class PrefabManagerWindow  extends JDialog{
 	
@@ -51,6 +63,9 @@ public class PrefabManagerWindow  extends JDialog{
 	private JScrollPane descriptionJSP;
 	private JTextArea descriptionJTA;
 	private JPanel additiveAttributesPanel;
+	
+	//Components of TextureMaker panel
+	private TMCanvas tmCanvas;
 
 	
 	//if null, manager adds new Prefab to the base 
@@ -180,6 +195,19 @@ public class PrefabManagerWindow  extends JDialog{
 		tiledWidthJTF.setPreferredSize(new Dimension(70,22));
 		tiledWidthJTF.setHorizontalAlignment(JTextField.CENTER);
 		tiledWidthJTF.setFont(Globals.DEFAULT_FONT);
+		tiledWidthJTF.addKeyListener(new KeyListener(){
+			@Override public void keyPressed(KeyEvent arg0) {}
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				try  {  
+					Integer.parseInt(tiledWidthJTF.getText());
+					tmCanvas.repaint();
+				}  
+				catch(NumberFormatException nfe){}  
+					
+			}
+			@Override public void keyTyped(KeyEvent arg0) {}
+		});
 		
 		JLabel xJL = new JLabel("x");
 		xJL.setFont(Globals.PARAMETER_FONT);
@@ -188,6 +216,19 @@ public class PrefabManagerWindow  extends JDialog{
 		tiledHeightJTF.setPreferredSize(new Dimension(70,22));
 		tiledHeightJTF.setHorizontalAlignment(JTextField.CENTER);
 		tiledHeightJTF.setFont(Globals.DEFAULT_FONT);
+		tiledHeightJTF.addKeyListener(new KeyListener(){
+			@Override public void keyPressed(KeyEvent arg0) {}
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				try  {  
+					Integer.parseInt(tiledHeightJTF.getText());
+					tmCanvas.repaint();
+				}  
+				catch(NumberFormatException nfe){}  
+					
+			}
+			@Override public void keyTyped(KeyEvent arg0) {}
+		});
 		
 		JLabel textureJL = new JLabel("Texture: ");
 		textureJL.setPreferredSize(new Dimension(100,25));
@@ -344,7 +385,7 @@ public class PrefabManagerWindow  extends JDialog{
 		SpringLayout slayout = new SpringLayout();
 		panel.setLayout(slayout);
 		
-		TMCanvas tmCanvas = new TMCanvas();
+		tmCanvas = new TMCanvas();
 		tmCanvas.setPreferredSize(new Dimension(495,panel.getPreferredSize().height));
 		
 		JPanel texturePartsPreviewJP = new JPanel();
@@ -556,17 +597,105 @@ public class PrefabManagerWindow  extends JDialog{
 		
 	}
 	
-	private class TMCanvas extends JPanel{
+	private class TMCanvas extends JPanel implements MouseMotionListener, MouseListener,MouseWheelListener{
+		
+		//Shifting values of viewport
+		private int viewportShiftX,viewportShiftY;
+		
+		private float scaleFactor;
+		
+		private int scaledTileSize;
+		
+		//Contains position of where the dragging started
+		//Used to calculate shifting of viewport
+		private Point dragStart;
 		
 		public TMCanvas(){
 			super();
 			setBackground(Color.BLACK);
+			setScaleFactor(1.0f);
+			setSize(getPreferredSize());
+			addMouseMotionListener(this);
+			addMouseListener(this);
+			addMouseWheelListener(this);
+			viewportShiftX = 0;
+			viewportShiftY = 0;
 			
+		}
+		
+		private void setScaleFactor(float scaleFactor){
+			this.scaleFactor = scaleFactor;
+			scaledTileSize = (int)(Globals.TILE_SIZE*scaleFactor);
 		}
 		
 		@Override
 		public void paint(Graphics g){
 			super.paint(g);
+			Graphics2D g2d = (Graphics2D)g;
+			//draw object's body border
+			if(!tiledWidthJTF.getText().isEmpty()&&!tiledHeightJTF.getText().isEmpty()){
+				int bodyWidth = Integer.valueOf(tiledWidthJTF.getText())*scaledTileSize;
+				int bodyHeight = Integer.valueOf(tiledHeightJTF.getText())*scaledTileSize;
+				
+				int posX = this.getWidth()/2-bodyWidth/2-viewportShiftX;
+				int posY = this.getHeight()/2-bodyHeight/2-viewportShiftY;
+				
+				g2d.setStroke(new BasicStroke(2*scaleFactor));
+				g2d.setColor(Color.BLUE);
+				
+				g2d.drawRect(posX, posY, bodyWidth, bodyHeight);
+			}
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent arg0) {
+			//Move viewport
+			viewportShiftX += dragStart.x-arg0.getX();
+			viewportShiftY += dragStart.y-arg0.getY();
+			System.out.println(viewportShiftX+" "+viewportShiftY);
+			dragStart = arg0.getPoint();
+			repaint();
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			//save the position of drag start
+			dragStart = arg0.getPoint();
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			dragStart = null;
+		}
+
+		@Override
+		public void mouseWheelMoved(MouseWheelEvent arg0) {
+			setScaleFactor(MathUtils.clamp(scaleFactor-(float)(arg0.getWheelRotation())*0.05f, 0.5f, 2.0f));
+			repaint();
 		}
 	}
 

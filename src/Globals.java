@@ -24,4 +24,6 @@ public class Globals {
 	public static final String ATLASES_FOLDER="src/resourses/textures/";
 	
 	public static final String LEVELS_FOLDER="src/levels/";
+	
+	public static final int TILE_SIZE = 60;
 }

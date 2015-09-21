@@ -54,7 +54,7 @@ public class Workspace extends JPanel{
 		private Level level;
 		
 		//Usual size of one tile in pixels
-		private static final int TILE_SIZE = 60;
+		private static final int TILE_SIZE = Globals.TILE_SIZE;
 		
 		private double scaleFactor;
 		private int scaledTileSize;
