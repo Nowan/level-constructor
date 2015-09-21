@@ -400,6 +400,12 @@ public class AssetManagerWindow extends JDialog{
 			newHeight+=assetPreview.getPreferredSize().height;
 		}
 		
+		JPanel paddingPanel = new JPanel();
+		paddingPanel.setPreferredSize(new Dimension(140,160));
+		paddingPanel.setBackground(Color.BLACK);
+		SpringLayout paddingSL = new SpringLayout();
+		paddingPanel.setLayout(paddingSL);
+		
 		JButton addAssetJB = new JButton("+");
 		addAssetJB.setFont(Globals.INDEX_FONT);
 		addAssetJB.setMargin(new Insets(0,0,0,0));
@@ -411,20 +417,20 @@ public class AssetManagerWindow extends JDialog{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				addAssetJP.setBorder(BorderFactory.createTitledBorder("Create new asset"));
-				selectedAsset=null;
 				if(selectedAssetPreview!=null)
-				selectedAssetPreview.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-				selectedAssetPreview=null;
-				selectedFrame = null;
+					selectedAssetPreview.setSelected(false);
 				setDetailedPreview(null);
 				detailedMainPreview.setBackground(Color.DARK_GRAY);
 				assetPartsJP.setBackground(Color.GRAY);
 				setInsertionMode(true);
 			}
 		});
+		paddingSL.putConstraint(SpringLayout.VERTICAL_CENTER, addAssetJB, 0, SpringLayout.VERTICAL_CENTER, paddingPanel);
+		paddingSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, addAssetJB, 0, SpringLayout.HORIZONTAL_CENTER, paddingPanel);
+		paddingPanel.add(addAssetJB);
 		
-		newHeight+=addAssetJB.getPreferredSize().height+20;
-		previewsJP.add(addAssetJB);
+		newHeight+=paddingPanel.getPreferredSize().height;
+		previewsJP.add(paddingPanel);
 		previewsJP.setPreferredSize(new Dimension(100,newHeight));
 		previewsJP.revalidate();
 		previewsJP.repaint();
@@ -448,22 +454,35 @@ public class AssetManagerWindow extends JDialog{
 		}
 		
 		if(selectedAsset==asset){
-			JButton addAssetJB = new JButton("+");
-			addAssetJB.setFont(Globals.INDEX_FONT);
-			addAssetJB.setMargin(new Insets(0,0,0,0));
-			addAssetJB.setPreferredSize(new Dimension(40,40));
-			addAssetJB.setContentAreaFilled(false);
-			addAssetJB.setForeground(Color.WHITE);
-			addAssetJB.setToolTipText("Add new Asset");
-			addAssetJB.addActionListener(new ActionListener(){
+			JPanel paddingPanel = new JPanel();
+			paddingPanel.setPreferredSize(new Dimension(100,100));
+			paddingPanel.setBackground(Color.BLACK);
+			SpringLayout paddingSL = new SpringLayout();
+			paddingPanel.setLayout(paddingSL);
+			
+			JButton addFrameJB = new JButton("+");
+			addFrameJB.setFont(Globals.INDEX_FONT);
+			addFrameJB.setMargin(new Insets(0,0,0,0));
+			addFrameJB.setPreferredSize(new Dimension(40,40));
+			addFrameJB.setContentAreaFilled(false);
+			addFrameJB.setForeground(Color.WHITE);
+			addFrameJB.setToolTipText("Add new Frame");
+			addFrameJB.addActionListener(new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					addAssetJP.setBorder(BorderFactory.createTitledBorder("Create new frame"));
+					if(selectedFrame!=null){
+						selectedFrame.setSelected(false);
+						detailedMainPreview.setImage(asset.getAssetTexture());
+					}
 					setInsertionMode(true);
 				}
 			});
-			assetPartsJP.add(addAssetJB);
-			newWidth+=addAssetJB.getPreferredSize().width;
+			paddingSL.putConstraint(SpringLayout.VERTICAL_CENTER, addFrameJB, 0, SpringLayout.VERTICAL_CENTER, paddingPanel);
+			paddingSL.putConstraint(SpringLayout.HORIZONTAL_CENTER, addFrameJB, 0, SpringLayout.HORIZONTAL_CENTER, paddingPanel);
+			paddingPanel.add(addFrameJB);
+			assetPartsJP.add(paddingPanel);
+			newWidth+=paddingPanel.getPreferredSize().width;
 		}
 		assetPartsJP.setPreferredSize(new Dimension(newWidth,140));
 		assetPartsJP.revalidate();
@@ -542,16 +561,16 @@ public class AssetManagerWindow extends JDialog{
 				Files.delete(Paths.get(textureAddress));
 				//save changes to assetsbase.xml
 				Globals.xmlConverter.saveAtlasesBase();
-				if(selectedFrame!=null)
-					setDetailedPreview(selectedAsset);
-				else{
-					setDetailedPreview(null);
-					rebuildAtlas();
-					onAtlasChanged();
+				GOBase.assetsBase.refresh();
+				//if no frame was selected, 
+				if(selectedFrame==null){
+					selectedAsset = null;
+					selectedAssetPreview = null;
 				}
-				selectedFrame=null;
-				selectedAsset = null;
-				selectedAssetPreview = null;
+				selectedFrame = null;
+				onAtlasChanged();
+				rebuildAtlas();
+				setDetailedPreview(selectedAsset);
 			}
 			catch(IOException ex){
 				System.out.println(ex.getStackTrace());
@@ -590,8 +609,10 @@ public class AssetManagerWindow extends JDialog{
 		}
 		
 		System.out.println(generatedAssetName);
+		
 		String targetAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+generatedAssetName+textureAddress.substring(textureAddress.lastIndexOf('.'));
 		
+		//copy texture to textures folder
 		if(!textureAddress.equals(targetAddress))
 			try{
 				Files.copy(Paths.get(textureAddress),Paths.get(targetAddress), StandardCopyOption.REPLACE_EXISTING);
@@ -601,18 +622,17 @@ public class AssetManagerWindow extends JDialog{
 			}
 		
 		//add new asset to runtime object base
-		if(selectedAsset!=null)
-			selectedAsset.addFrame(generatedAssetName);
-		else
+		if(selectedAsset==null)
 			atlas.getAssets().add(new Asset(atlas,generatedAssetName));
+		else
+			selectedAsset.addFrame(generatedAssetName);
 		
 		//save changes to assetsbase.xml
 		Globals.xmlConverter.saveAtlasesBase();
-		onAtlasChanged();
-		rebuildAtlas();
+		GOBase.assetsBase.refresh();
 		onDiscardClicked();
-		if(selectedAsset!=null)
-			setDetailedPreview(selectedAsset);
+		rebuildAtlas();
+		onAtlasChanged();
 		confirmJB.setEnabled(false);
 	}
 	
@@ -637,12 +657,11 @@ public class AssetManagerWindow extends JDialog{
 			int extendedHeight = asset.hasAnimation() ? 50 : 0;
 			setPreferredSize(new Dimension(144,124+extendedHeight));
 			setBackground(Color.BLACK);
-			if(linkToAssetManager.selectedAsset!=asset)
+			if(selectedAsset!=null && selectedAsset==asset)
+				setSelected(true);
+			else
 				setBorder(BorderFactory.createLineBorder(Color.BLACK));
-			else{
-				setBorder(BorderFactory.createLineBorder(Color.GRAY,2));
-				selectedAssetPreview = this;
-			}
+			
 			SpringLayout slayout = new SpringLayout();
 			setLayout(slayout);
 			
@@ -736,6 +755,7 @@ public class AssetManagerWindow extends JDialog{
 				setBorder(BorderFactory.createLineBorder(Color.GRAY,2));
 			}
 			else{
+				setBorder(BorderFactory.createLineBorder(Color.BLACK));
 				selectedAssetPreview = null;
 				selectedAsset = null;
 				if(selectedFrame!=null)
@@ -789,6 +809,7 @@ public class AssetManagerWindow extends JDialog{
 
 		@Override
 		public void mouseEntered(MouseEvent e) {
+			if(insertionMode) return;
 			if(selectedFrame!=this){
 				setBorder(BorderFactory.createLineBorder(Color.GRAY));
 				detailedMainPreview.setImage(frameTexture);
@@ -797,6 +818,7 @@ public class AssetManagerWindow extends JDialog{
 
 		@Override
 		public void mouseExited(MouseEvent e) {
+			if(insertionMode) return;
 			if(selectedFrame!=this){
 				setBorder(BorderFactory.createEmptyBorder());
 				if(selectedFrame==null)
@@ -808,6 +830,7 @@ public class AssetManagerWindow extends JDialog{
 
 		@Override
 		public void mousePressed(MouseEvent e) {
+			if(insertionMode) return;
 			if(selectedFrame!=null){
 				if(selectedFrame!=this){
 					selectedFrame.setBorder(BorderFactory.createEmptyBorder());

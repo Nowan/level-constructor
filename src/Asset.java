@@ -83,7 +83,6 @@ public class Asset {
 			this.setFrameName(frameName);
 			try{
 				String textureAddress = Globals.TEXTURES_FOLDER+atlas.getName()+"/"+frameName+".png";
-				System.out.println("- "+textureAddress);
 				this.setFrameTexture(ImageIO.read(new File(textureAddress)));
 			}
 			catch(IOException ex){

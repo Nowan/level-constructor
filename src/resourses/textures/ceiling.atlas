@@ -1,61 +1,47 @@
 
 ceiling.png
-size: 1024,512
+size: 512,512
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
 ceiling-01
   rotate: false
-  xy: 2, 99
+  xy: 2, 195
   size: 386, 276
   orig: 386, 276
   offset: 0, 0
   index: -1
 ceiling-01
   rotate: false
-  xy: 2, 99
+  xy: 2, 195
   size: 386, 276
   orig: 386, 276
   offset: 0, 0
   index: 1
-ceiling-01
-  rotate: false
-  xy: 390, 95
-  size: 184, 184
-  orig: 184, 184
-  offset: 0, 0
-  index: 4
-ceiling-01
-  rotate: false
-  xy: 390, 95
-  size: 184, 184
-  orig: 184, 184
-  offset: 0, 0
-  index: 5
 ceiling-02
   rotate: false
-  xy: 2, 2
+  xy: 2, 98
   size: 384, 95
   orig: 384, 95
   offset: 0, 0
   index: -1
 ceiling-01
   rotate: false
-  xy: 2, 2
+  xy: 2, 98
   size: 384, 95
   orig: 384, 95
   offset: 0, 0
   index: 2
 ceiling-03
   rotate: false
-  xy: 390, 281
+  xy: 2, 2
   size: 284, 94
   orig: 284, 94
   offset: 0, 0
   index: -1
 ceiling-01
   rotate: false
-  xy: 390, 281
+  xy: 2, 2
   size: 284, 94
   orig: 284, 94
   offset: 0, 0
